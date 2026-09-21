@@ -1,3 +1,30 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Logs
+*.log
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Local storage/uploads
+uploads/
+storage/
+
+
+
+
 # Dependencies
 node_modules/
 .pnp

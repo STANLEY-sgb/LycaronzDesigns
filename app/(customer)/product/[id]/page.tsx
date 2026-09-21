@@ -273,14 +273,14 @@ export default function ProductDetails() {
 
               {/* Information Tabs */}
               <div className="flex border-b border-gray-200 mb-6 gap-2">
-                {[
+                {([
                   { id: 'description', label: 'Description' },
                   { id: 'specifications', label: 'Craft & Fabric' },
                   { id: 'shipping', label: 'Atelier Delivery' },
-                ].map((tab) => (
+                ] as const).map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id)}
                     className={`pb-3 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all relative ${
                       activeTab === tab.id 
                         ? 'text-gray-950 font-black' 

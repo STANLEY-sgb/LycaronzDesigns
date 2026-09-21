@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Replace YOUR_DOMAIN with your production domain (e.g. https://sharon-tailors.com)
+Sitemap: https://YOUR_DOMAIN/sitemap.xml
+Host: https://YOUR_DOMAIN

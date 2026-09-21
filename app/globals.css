@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #0052FF;
+  --secondary: #FFD700;
+  --success: #00C851;
+  --danger: #ff4444;
+  --bg-light: #F8F9FA;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  @apply bg-white text-gray-900 font-sans antialiased;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+@layer components {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-10 py-4 bg-primary text-white rounded-xl font-black shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 active:scale-95 text-center uppercase tracking-widest;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-10 py-4 bg-secondary text-gray-900 border-none rounded-xl font-black shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 active:scale-95 text-center uppercase tracking-widest;
+  }
+
+  .card {
+    @apply bg-white rounded-[2rem] shadow-xl hover:shadow-[0_20px_50px_rgba(0,82,255,0.2)] transition-all duration-500 border-2 border-gray-50 overflow-hidden;
+  }
+
+  .section-title {
+    @apply text-4xl md:text-7xl font-black text-gray-900 mb-8 text-center leading-[0.9] tracking-tighter uppercase;
+  }
+
+  .input-field {
+    @apply w-full px-6 py-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none font-bold;
+  }
+
+  .nav-tab {
+    @apply text-lg font-black uppercase tracking-widest px-6 py-2 rounded-xl transition-all border-b-4 border-transparent hover:border-primary hover:text-primary active:scale-95;
+  }
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 20s linear infinite;
+}
+
+.pause-on-hover:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+  .section-title {
+    @apply text-3xl;
+  }
+  
+  .btn-primary, .btn-secondary {
+    @apply w-full py-4;
+  }
+}
+
+/* Smooth Scrolling for iOS */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+}

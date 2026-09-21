@@ -4,59 +4,89 @@ import { auth } from '@/auth';
 import fs from 'fs';
 import path from 'path';
 
-// Support both Vercel Blob (when BLOB_READ_WRITE_TOKEN is provided) and local filesystem storage (public/uploads)
+const ALLOWED_IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
+const ALLOWED_VIDEO_EXTS = ['.mp4', '.webm', '.mov', '.ogg', '.m4v'];
+const ALLOWED_EXTS = [...ALLOWED_IMAGE_EXTS, ...ALLOWED_VIDEO_EXTS];
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;  // 20 MB
+const MAX_VIDEO_BYTES = 150 * 1024 * 1024; // 150 MB
+
+function sanitizeFilename(name: string): string {
+  // Remove path traversal, null bytes, and keep only safe characters
+  return name
+    .replace(/[/\\]/g, '')
+    .replace(/\0/g, '')
+    .replace(/[^a-zA-Z0-9.\-_]/g, '_')
+    .substring(0, 200);
+}
+
 export async function POST(request: Request): Promise<NextResponse> {
   const session = await auth();
-  // Allow unauthenticated uploads during local development for convenience.
-  // In production, require a valid session.
-  if (!session && process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized. Please log in to upload files.' }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
-  const filename = searchParams.get('filename') || 'upload';
+  const rawFilename = searchParams.get('filename') || 'upload';
+  const filename = sanitizeFilename(rawFilename);
+  const ext = path.extname(filename).toLowerCase();
+
+  // Server-side file type validation
+  if (!ALLOWED_EXTS.includes(ext)) {
+    return NextResponse.json(
+      { error: `Unsupported file type "${ext}". Allowed: JPG, PNG, WebP, GIF, MP4, WebM, MOV, OGG.` },
+      { status: 415 }
+    );
+  }
+
+  const isVideo = ALLOWED_VIDEO_EXTS.includes(ext);
+  const maxBytes = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+  const maxLabel = isVideo ? '150 MB' : '20 MB';
 
   try {
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-
-    // If a Vercel Blob token is configured and not the placeholder, use @vercel/blob (production)
     const useBlob = blobToken && !blobToken.includes('your-');
+
     if (useBlob) {
+      // Vercel Blob (production) — stream directly, size enforced by Blob service
       const blob = await put(filename, request.body as ReadableStream, { access: 'public' });
-      return NextResponse.json(blob);
+      return NextResponse.json({ url: blob.url, name: filename });
     }
 
-    // Otherwise, save to local public/uploads folder for local development
+    // Local development: read body and validate size
     const arrayBuffer = await request.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    if (buffer.length > maxBytes) {
+      const sizeMB = (buffer.length / (1024 * 1024)).toFixed(1);
+      return NextResponse.json(
+        { error: `File too large (${sizeMB} MB). Maximum allowed for ${isVideo ? 'videos' : 'images'}: ${maxLabel}.` },
+        { status: 413 }
+      );
+    }
+
+    if (buffer.length === 0) {
+      return NextResponse.json({ error: 'Received an empty file. Please try again.' }, { status: 400 });
+    }
 
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     await fs.promises.mkdir(uploadsDir, { recursive: true });
 
-    const ext = path.extname(filename) || '';
-
-    // Basic validation: restrict video size and allowed extensions
-    const maxBytes = 150 * 1024 * 1024; // 150 MB limit (adjustable)
-    const allowedVideoExts = ['.mp4', '.webm', '.mov', '.ogg', '.m4v'];
-    const isVideo = allowedVideoExts.includes(ext.toLowerCase());
-
-    if (isVideo && buffer.length > maxBytes) {
-      return NextResponse.json({ error: 'File too large. Max 150MB allowed for videos.' }, { status: 413 });
-    }
-
-    // Use a timestamp + random to avoid collisions
+    // Generate unique collision-safe filename
     const uniqueName = `${Date.now()}-${Math.floor(Math.random() * 1e9)}${ext}`;
     const filePath = path.join(uploadsDir, uniqueName);
-
     await fs.promises.writeFile(filePath, buffer);
 
-    // Build a usable URL. Prefer NEXTAUTH_URL if set (e.g., http://localhost:3000)
-    const baseUrl = process.env.NEXTAUTH_URL || '';
-    const url = baseUrl ? `${baseUrl.replace(/\/$/, '')}/uploads/${uniqueName}` : `/uploads/${uniqueName}`;
+    // Build absolute URL for local dev
+    const baseUrl = (process.env.NEXTAUTH_URL || 'http://localhost:3001').replace(/\/$/, '');
+    const url = `${baseUrl}/uploads/${uniqueName}`;
 
     return NextResponse.json({ url, path: `/uploads/${uniqueName}`, name: uniqueName });
   } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    // Log full detail server-side; expose only a safe message to the client
+    console.error('[Upload] Error processing upload:', error);
+    return NextResponse.json(
+      { error: 'Upload failed due to a server error. Please try again.' },
+      { status: 500 }
+    );
   }
 }

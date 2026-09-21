@@ -3,11 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --primary: #0052FF;
-  --secondary: #FFD700;
-  --success: #00C851;
-  --danger: #ff4444;
-  --bg-light: #F8F9FA;
+  --primary: #1E3A8A;
+  --primary-dark: #0A0D1F;
+  --secondary: #D4AF37;
+  --gold: #D4AF37;
+  --gold-light: #F7E7B4;
+  --gold-dark: #AA8222;
+  --success: #10B981;
+  --danger: #EF4444;
+  --bg-light: #FAF8F5;
 }
 
 * {
@@ -19,12 +23,67 @@
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  @apply bg-white text-gray-900 font-sans antialiased;
+  @apply bg-[#FAF8F5] text-gray-900 font-sans antialiased;
   overflow-x: hidden;
   width: 100%;
+  min-height: 100vh;
+}
+
+/* ── Small-screen overflow safety ──────────────────────────────────────────── */
+
+/* Prevent flex/grid children from overflowing their container */
+.container-custom *,
+section *,
+nav *,
+footer * {
+  min-width: 0;
+}
+
+/* Long strings (emails, phone numbers, addresses, URLs) should wrap cleanly */
+a[href^="tel:"],
+a[href^="mailto:"],
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Ensure no element causes horizontal scroll */
+img,
+video,
+iframe,
+table {
+  max-width: 100%;
+}
+
+/* ── Custom Luxury Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0D1F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A3356;
+  border-radius: 9999px;
+  border: 2px solid #0A0D1F;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #D4AF37;
+}
+
+/* ── High contrast keyboard focus indicators ────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid #D4AF37 !important;
+  outline-offset: 2px !important;
 }
 
 @layer components {
@@ -33,58 +92,132 @@ body {
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-10 py-4 bg-primary text-white rounded-xl font-black shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 active:scale-95 text-center uppercase tracking-widest;
+    @apply inline-flex items-center justify-center gap-2 px-6 sm:px-9 py-3.5 sm:py-4 bg-gradient-to-r from-primary to-blue-700 text-white rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 text-center uppercase tracking-widest cursor-pointer;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-10 py-4 bg-secondary text-gray-900 border-none rounded-xl font-black shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 active:scale-95 text-center uppercase tracking-widest;
+    @apply inline-flex items-center justify-center gap-2 px-6 sm:px-9 py-3.5 sm:py-4 bg-[#D4AF37] hover:bg-[#E5BE48] text-gray-950 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-95 transition-all duration-300 text-center uppercase tracking-widest cursor-pointer;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 px-6 sm:px-9 py-3.5 sm:py-4 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-gray-950 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm shadow-xl shadow-amber-400/25 hover:shadow-2xl hover:shadow-amber-400/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 text-center uppercase tracking-widest cursor-pointer;
+  }
+
+  .btn-dark {
+    @apply inline-flex items-center justify-center gap-2 px-6 sm:px-9 py-3.5 sm:py-4 bg-[#0A0D1F] hover:bg-[#121733] text-white border border-white/15 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm shadow-xl hover:border-amber-400/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 text-center uppercase tracking-widest cursor-pointer;
+  }
+
+  .btn-outline-gold {
+    @apply inline-flex items-center justify-center gap-2 px-6 sm:px-9 py-3.5 sm:py-4 bg-transparent border-2 border-amber-400/70 hover:border-amber-400 text-amber-400 hover:bg-amber-400/10 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300 text-center uppercase tracking-widest cursor-pointer;
   }
 
   .card {
-    @apply bg-white rounded-[2rem] shadow-xl hover:shadow-[0_20px_50px_rgba(0,82,255,0.2)] transition-all duration-500 border-2 border-gray-50 overflow-hidden;
+    @apply bg-white rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-xl hover:border-amber-400/30 transition-all duration-500 border border-gray-100 overflow-hidden;
+  }
+
+  .card-luxury {
+    @apply bg-gradient-to-b from-white to-gray-50/50 rounded-2xl sm:rounded-[2.5rem] shadow-md hover:shadow-2xl hover:border-amber-400/40 transition-all duration-500 border border-gray-200/80 overflow-hidden;
+  }
+
+  .card-dark {
+    @apply bg-[#0A0D1F] rounded-2xl sm:rounded-[2.5rem] border border-white/10 shadow-xl overflow-hidden text-white;
   }
 
   .section-title {
-    @apply text-4xl md:text-7xl font-black text-gray-900 mb-8 text-center leading-[0.9] tracking-tighter uppercase;
+    @apply text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-6 text-center leading-[0.95] tracking-tight uppercase;
   }
 
   .input-field {
-    @apply w-full px-6 py-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none font-bold;
+    @apply w-full px-4 sm:px-5 py-3.5 sm:py-4 bg-gray-50/90 border border-gray-200 rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-400/20 focus:border-amber-500 transition-all outline-none font-bold text-sm text-gray-900 placeholder:text-gray-400;
   }
 
   .nav-tab {
-    @apply text-lg font-black uppercase tracking-widest px-6 py-2 rounded-xl transition-all border-b-4 border-transparent hover:border-primary hover:text-primary active:scale-95;
+    @apply text-xs sm:text-sm font-black uppercase tracking-widest px-4 sm:px-6 py-2.5 rounded-xl transition-all border-b-2 border-transparent hover:border-amber-400 hover:text-amber-400 active:scale-95;
   }
 }
 
-/* Marquee Animation */
+/* ── Marquee / Ticker Animation ─────────────────────────────────────────────── */
 @keyframes marquee {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(-25%); }
 }
 
 .animate-marquee {
   display: flex;
   width: max-content;
-  animation: marquee 20s linear infinite;
+  animation: marquee 32s linear infinite;
+  will-change: transform;
 }
 
 .pause-on-hover:hover .animate-marquee {
   animation-play-state: paused;
 }
 
-/* Mobile Optimizations */
-@media (max-width: 640px) {
-  .section-title {
-    @apply text-3xl;
+/* ── Smooth Scrolling for Mobile & iOS ──────────────────────────────────────── */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Accessibility: Respect Reduced Motion Preferences ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
-  
-  .btn-primary, .btn-secondary {
-    @apply w-full py-4;
+  .animate-marquee {
+    animation: none;
+    transform: none;
   }
 }
 
-/* Smooth Scrolling for iOS */
-.scroll-touch {
+/* ── 320px-safe utility overrides ───────────────────────────────────────────── */
+@media (max-width: 359px) {
+  /* Reduce container horizontal padding on sub-xs screens */
+  .container-custom {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+
+  /* Prevent badge text overflow */
+  .hero-badge {
+    font-size: 9px;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+}
+
+/* ── Mobile bottom navigation safe area ─────────────────────────────────────── */
+
+/*
+  Toasts should appear above the bottom nav on mobile.
+  The Sonner <Toaster position="top-center"> is already at top, so this
+  is just a safeguard for any bottom-positioned overlays.
+*/
+@media (max-width: 767px) {
+  /* Make sure modal/dialog content is not hidden behind bottom nav */
+  [role="dialog"],
+  [role="alertdialog"] {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+}
+
+/* ── Utility: truncate long text in table cells ─────────────────────────────── */
+.truncate-cell {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Admin table wrapper (horizontal scroll on mobile) ──────────────────────── */
+.table-scroll-wrapper {
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  border-radius: 1.5rem;
+  border: 1px solid #e5e7eb;
 }

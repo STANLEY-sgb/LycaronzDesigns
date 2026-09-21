@@ -1,21 +1,38 @@
-import { auth } from "@/auth"
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth
-  const isAdminRoute = req.nextUrl.pathname.startsWith("/admin")
-  const isLoginPage = req.nextUrl.pathname === "/admin/login"
+/**
+ * Lightweight Edge-compatible middleware.
+ * Uses `getToken` from next-auth/jwt instead of the full `auth()` function
+ * to avoid importing bcryptjs into the Edge Runtime.
+ */
+export async function middleware(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
-  if (isAdminRoute && !isLoggedIn && !isLoginPage) {
-    return Response.redirect(new URL("/admin/login", req.nextUrl))
+  const { pathname } = req.nextUrl;
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isLoginPage  = pathname === '/admin/login';
+
+  // Redirect unauthenticated users away from protected admin routes
+  if (isAdminRoute && !isLoginPage && !token) {
+    const url = req.nextUrl.clone();
+    url.pathname = '/admin/login';
+    return NextResponse.redirect(url);
   }
 
-  if (isLoginPage && isLoggedIn) {
-    return Response.redirect(new URL("/admin/dashboard", req.nextUrl))
+  // Redirect already-authenticated users away from the login page
+  if (isLoginPage && token) {
+    const url = req.nextUrl.clone();
+    url.pathname = '/admin/dashboard';
+    return NextResponse.redirect(url);
   }
 
-  return null
-})
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
-}
+  matcher: ['/admin/:path*', '/api/admin/:path*'],
+};

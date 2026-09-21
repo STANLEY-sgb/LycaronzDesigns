@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 import { signIn } from 'next-auth/react';
 
 export default function AdminLogin() {
@@ -36,108 +37,135 @@ export default function AdminLogin() {
       });
 
       if (result?.error) {
-        setError('Invalid email or password. Please try again.');
+        setError('Invalid credentials. Please verify your email and password.');
         setLoading(false);
       } else {
         router.push('/admin/dashboard');
         router.refresh();
       }
     } catch {
-      setError('An error occurred. Please try again.');
+      setError('An unexpected error occurred. Please try again.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary-dark to-black flex items-center justify-center p-6">
-      <div className="absolute top-10 left-10">
-        <Link href="/" className="flex items-center gap-2 text-white/60 hover:text-white transition-all font-black uppercase tracking-widest text-xs">
+    <div className="min-h-screen bg-[#0A0D1F] flex items-center justify-center p-4 xs:p-6 relative overflow-hidden selection:bg-amber-400 selection:text-black">
+      {/* Background ambient lighting */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Return to Store Link */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 text-gray-400 hover:text-amber-400 transition-colors font-black uppercase tracking-widest text-xs"
+        >
           <ArrowLeft size={16} />
-          Back to Store
+          <span>Back to Store</span>
         </Link>
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative z-10 pt-10 xs:pt-0"
       >
-        <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden p-10 md:p-16">
-          <div className="text-center mb-10">
-            <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mx-auto mb-6 shadow-inner">
-              <ShieldCheck size={40} />
-            </div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase text-gray-900">Admin <span className="text-primary">Portal</span></h1>
-            <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px] mt-2">Secure Management Access</p>
+        <div className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden p-6 sm:p-10 border border-gray-100">
+          
+          {/* Header */}
+          <div className="text-center mb-8">
+            <Logo size="lg" priority className="mx-auto mb-4" />
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight uppercase text-gray-900 leading-tight">
+              LYCARONZ <span className="text-amber-600">ADMIN</span>
+            </h1>
+            <p className="text-gray-400 font-bold uppercase tracking-widest text-[9px] sm:text-[10px] mt-1">
+              Atelier Management Portal
+            </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Email Address</label>
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">
+                Staff Email Address
+              </label>
               <div className="relative">
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-12 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary transition-all outline-none font-bold"
-                  placeholder="admin@sharrontailors.com"
+                  className="input-field pl-11"
+                  placeholder="admin@lycaronzdesigns.com"
                 />
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Password</label>
+            <div>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">
+                Security Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-12 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary transition-all outline-none font-bold"
+                  className="input-field pl-11 pr-11"
                   placeholder="••••••••"
                 />
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-primary transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
             {error && (
               <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest text-center"
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold text-center border border-red-200"
               >
                 {error}
               </motion.div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-5 rounded-[2rem] text-xl shadow-2xl disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin" size={24} />
-                  AUTHENTICATING...
-                </>
-              ) : (
-                'ACCESS DASHBOARD'
-              )}
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full btn-gold py-4 text-xs sm:text-sm shadow-xl disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    <span>Verifying Access...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={18} />
+                    <span>Access Dashboard</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
-          <p className="mt-10 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest">
-            Protected by Industry Standard Encryption
-          </p>
+          <div className="mt-8 pt-4 border-t border-gray-100 text-center">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
+              <ShieldCheck size={13} className="text-emerald-500" />
+              <span>Encrypted Session Authentication</span>
+            </span>
+          </div>
         </div>
       </motion.div>
     </div>

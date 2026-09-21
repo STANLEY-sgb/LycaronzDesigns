@@ -187,21 +187,21 @@ export default function AdminSettings() {
               </div>
             </div>
 
-            <div className="pt-6">
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full btn-primary py-5 rounded-[2rem] text-xl shadow-2xl transition-all flex items-center justify-center gap-3"
+                className="w-full btn-gold py-4 text-xs sm:text-sm uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="animate-spin" size={24} />
-                    UPDATING...
+                    <Loader2 className="animate-spin" size={18} />
+                    <span>SAVING CREDENTIALS...</span>
                   </>
                 ) : (
                   <>
-                    <Save size={24} />
-                    SAVE CHANGES
+                    <Save size={18} />
+                    <span>SAVE CREDENTIALS</span>
                   </>
                 )}
               </button>

@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ArrowUpRight, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Sparkles, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
+import { BUSINESS_INFO } from '@/lib/constants';
 
 interface ProductCardProps {
   id: string;
@@ -29,79 +29,113 @@ export default function ProductCard({
   const selectedMedia = imageUrl || image || '';
   const [imgError, setImgError] = useState(false);
 
+  const formattedPrice =
+    price && price > 0 ? `UGX ${price.toLocaleString()}` : 'Custom Quote';
+
+  const directWhatsappUrl = `https://wa.me/${BUSINESS_INFO.primaryWhatsappRaw}?text=${encodeURIComponent(
+    `Hello Lycaronz Designs! I would like to order/inquire about "${name}" (${formattedPrice}).`
+  )}`;
+
   return (
-    <motion.div
-      whileHover={{ y: -6 }}
-      transition={{ duration: 0.3 }}
-      className="group relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl hover:border-amber-400/30 transition-all duration-500 flex flex-col h-full"
-    >
-      <Link href={`/product/${id}`} className="block relative aspect-[4/5] bg-[#0A0D1F]/5 overflow-hidden">
+    <article className="group relative bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden border border-gray-200/80 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-500 flex flex-col h-full">
+
+      {/* Product Image Frame */}
+      <Link
+        href={`/product/${id}`}
+        className="block relative aspect-[4/5] bg-gray-100 overflow-hidden"
+        aria-label={`View details for ${name}`}
+      >
         {selectedMedia && !imgError ? (
           <Image
             src={selectedMedia}
-            alt={name}
+            alt={`${name} – ${category} by LYCARONZ DESIGNS`}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 95vw, (max-width: 1024px) 48vw, 33vw"
             className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            loading="lazy"
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-primary/10 via-slate-100 to-amber-50">
-            <div className="w-16 h-16 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center text-primary font-black text-2xl mb-3">
+          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#0A0D1F]/5 via-slate-100 to-amber-50">
+            <div className="w-14 h-14 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center text-primary font-black text-xl mb-2">
               LD
             </div>
-            <span className="font-black text-gray-500 uppercase tracking-widest text-xs">{name}</span>
+            <span className="font-black text-gray-500 uppercase tracking-widest text-[11px] line-clamp-2">
+              {name}
+            </span>
           </div>
         )}
 
-        {/* Gradient Overlay on Hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        {/* Ambient Gradient on Hover */}
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          aria-hidden="true"
+        />
 
-        {/* Category Pill */}
-        <div className="absolute top-3.5 left-3.5 z-10">
-          <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[#0A0D1F] font-black text-[10px] uppercase tracking-[0.2em] shadow-md border border-gray-100 flex items-center gap-1">
-            <Sparkles size={10} className="text-amber-500" />
-            {category}
+        {/* Category Badge */}
+        <div className="absolute top-3 left-3 z-10">
+          <span className="px-2.5 py-1 rounded-full bg-[#0A0D1F]/90 backdrop-blur-md text-amber-300 font-black text-[9px] sm:text-[10px] uppercase tracking-[0.15em] shadow-md border border-amber-400/30 flex items-center gap-1">
+            <Sparkles size={9} className="text-amber-400" aria-hidden="true" />
+            <span className="max-w-[90px] truncate">{category}</span>
           </span>
         </div>
 
-        {/* Quick View Floating Pill on Hover */}
-        <div className="absolute bottom-3.5 right-3.5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-          <span className="px-3.5 py-1.5 rounded-xl bg-white text-gray-900 font-bold text-xs shadow-xl flex items-center gap-1.5">
-            <span>View Details</span>
+        {/* View Details Floating Chip */}
+        <div
+          className="absolute bottom-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0"
+          aria-hidden="true"
+        >
+          <span className="px-3 py-1.5 rounded-xl bg-white text-gray-900 font-bold text-xs shadow-xl flex items-center gap-1">
+            <span>Details</span>
             <ArrowUpRight size={14} />
           </span>
         </div>
       </Link>
 
-      <div className="p-5 sm:p-6 flex flex-col flex-grow justify-between">
-        <div>
+      {/* Card Information */}
+      <div className="p-4 sm:p-5 flex flex-col flex-grow justify-between">
+        <div className="min-w-0">
           <Link href={`/product/${id}`}>
-            <h3 className="font-black text-base sm:text-lg text-gray-900 group-hover:text-primary transition-colors line-clamp-1 uppercase tracking-tight mb-2">
+            <h3 className="font-black text-sm sm:text-base text-gray-900 group-hover:text-primary transition-colors line-clamp-1 uppercase tracking-tight mb-1">
               {name}
             </h3>
           </Link>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+            Haute Couture • Bespoke
+          </span>
         </div>
 
-        <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+        <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100 gap-2">
+          <div className="flex flex-col min-w-0">
+            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
               Price
             </span>
-            <span className="text-primary font-black text-base sm:text-lg tracking-tight">
-              {price && price > 0 ? `UGX ${price.toLocaleString()}` : 'Custom Quote'}
+            <span className="text-gray-950 font-black text-sm sm:text-base tracking-tight truncate">
+              {formattedPrice}
             </span>
           </div>
 
-          <Link
-            href={`/product/${id}`}
-            aria-label={`View ${name} details`}
-            className="w-10 h-10 rounded-xl bg-gray-900 group-hover:bg-primary flex items-center justify-center text-white transition-all shadow-md active:scale-95"
-          >
-            <ArrowUpRight size={18} />
-          </Link>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <a
+              href={directWhatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Inquire about ${name} on WhatsApp`}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-green-50 hover:bg-green-100 text-[#25D366] flex items-center justify-center transition-all border border-green-200 active:scale-95"
+            >
+              <MessageCircle size={15} aria-hidden="true" />
+            </a>
+
+            <Link
+              href={`/product/${id}`}
+              aria-label={`View full details for ${name}`}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#0A0D1F] hover:bg-primary text-white flex items-center justify-center transition-all shadow-sm active:scale-95"
+            >
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </article>
   );
 }

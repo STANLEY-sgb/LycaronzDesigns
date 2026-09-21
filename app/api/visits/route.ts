@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     // always append visit
     await appendVisit(entry);
 
-    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || 'info.sharontylors@gmail.com';
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || 'info.lycaronz@gmail.com';
     const smtpHost = process.env.SMTP_HOST;
 
     if (smtpHost && shouldEmail) {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         });
 
         await transporter.sendMail({
-          from: process.env.FROM_EMAIL || 'no-reply@sharon-tailors.com',
+          from: process.env.FROM_EMAIL || 'no-reply@lycaronzdesigns.com',
           to: adminEmail,
           subject: `Site visit: ${p}`,
           text: `A visitor was detected on the site\n\nPath: ${p}\nReferrer: ${referrer}\nIP: ${ip}\nUser-Agent: ${ua}\nTime: ${entry.time}`,

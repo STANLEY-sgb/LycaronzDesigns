@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Sharon Tailors MVP - Complete File Generator
+ * Lycaronz Designs MVP - Complete File Generator
  * 
  * This script generates all necessary files for the project
  * Run with: node generate-files.js
@@ -18,10 +18,10 @@ import { Providers } from '@/components/Providers';
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
-  title: 'Sharon Tailors - Custom Tailoring & E-Commerce',
+  title: 'Lycaronz Designs - Custom Tailoring & E-Commerce',
   description: 'Modern tailoring and fashion e-commerce shop. Custom style, perfect fit.',
   openGraph: {
-    title: 'Sharon Tailors',
+    title: 'Lycaronz Designs',
     description: 'Custom Style, Perfect Fit',
     type: 'website',
   },
@@ -188,7 +188,7 @@ export const SERVICES = [
 ];
 
 export const BUSINESS_INFO = {
-  name: 'Sharon Tailors',
+  name: 'Lycaronz Designs',
   tagline: 'Custom Style, Perfect Fit',
   location: 'Kampala, Jemba Plaza, just after Old Taxi Park',
   phone: '+256 705 241 179',
@@ -662,7 +662,7 @@ export default function Navbar() {
             <span className={\`font-black text-2xl tracking-tighter hidden sm:block \${
               scrolled ? 'text-primary' : 'text-white'
             }\`}>
-              SHARON <span className={scrolled ? 'text-secondary' : 'text-white/80'}>TAILORS</span>
+              LYCARONZ <span className={scrolled ? 'text-secondary' : 'text-white/80'}>DESIGNS</span>
             </span>
           </Link>
 
@@ -784,7 +784,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="font-bold text-lg mb-4">Sharon Tailors</h3>
+            <h3 className="font-bold text-lg mb-4">Lycaronz Designs</h3>
             <p className="text-gray-300">{BUSINESS_INFO.tagline}</p>
           </div>
 
@@ -834,7 +834,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-500 pt-8 text-center text-gray-300">
-          <p>&copy; 2026 Sharon Tailors. All rights reserved.</p>
+          <p>&copy; 2026 Lycaronz Designs. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -956,7 +956,7 @@ export default function Hero() {
             transition={{ delay: 0.2 }}
             className="text-5xl md:text-8xl font-black text-white mb-6 leading-[0.9] tracking-tight"
           >
-            SHARON <span className="text-secondary">TAILORS</span>
+            LYCARONZ <span className="text-secondary">DESIGNS</span>
           </motion.h1>
           
           <motion.p
@@ -1421,7 +1421,7 @@ export default function ProductDetails() {
     );
   }
 
-  const whatsappLink = \`https://wa.me/\${BUSINESS_INFO.whatsapp.replace(/\\D/g, '')}?text=Hi Sharon Tailors! I am interested in the "\${product.name}" (UGX \${product.price.toLocaleString()}). Can I get more details?\`;
+  const whatsappLink = \`https://wa.me/\${BUSINESS_INFO.whatsapp.replace(/\\D/g, '')}?text=Hi Lycaronz Designs! I am interested in the "\${product.name}" (UGX \${product.price.toLocaleString()}). Can I get more details?\`;
 
   return (
     <div className="bg-white">
@@ -1542,7 +1542,7 @@ export default function ProductDetails() {
               <div className="mb-12 min-h-[100px]">
                 {activeTab === 'description' && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-gray-600 text-lg leading-relaxed font-medium">
-                    {product.description || "No description provided for this exquisite piece. Each Sharon Tailors garment is handcrafted with precision and care to ensure a perfect fit and timeless style."}
+                    {product.description || "No description provided for this exquisite piece. Each Lycaronz Designs garment is handcrafted with precision and care to ensure a perfect fit and timeless style."}
                   </motion.p>
                 )}
                 {activeTab === 'specifications' && (
@@ -1640,7 +1640,7 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-20"
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6">About Sharon Tailors</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6">About Lycaronz Designs</h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Dedicated to the art of tailoring, we bring your fashion dreams to life with precision, 
               passion, and a perfect fit.
@@ -1657,7 +1657,7 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold text-gray-800 mb-6">Our Story</h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>
-                  Founded in the heart of Kampala, Sharon Tailors began with a simple mission: 
+                  Founded in the heart of Kampala, Lycaronz Designs began with a simple mission: 
                   to provide high-quality, custom-tailored clothing that makes people feel confident 
                   and comfortable.
                 </p>
@@ -1678,7 +1678,7 @@ export default function AboutPage() {
               transition={{ delay: 0.2 }}
               className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl bg-primary flex items-center justify-center text-white text-4xl font-bold"
             >
-              <span className="text-center p-8">Sharon Tailors<br/>Since 2026</span>
+              <span className="text-center p-8">Lycaronz Designs<br/>Since 2026</span>
             </motion.div>
           </div>
 
@@ -2458,7 +2458,7 @@ export default function AdminDashboard() {
     <div className="space-y-10">
       <header>
         <h1 className="text-4xl font-black tracking-tight text-gray-900 uppercase">Dashboard</h1>
-        <p className="text-gray-500 font-medium">Welcome back to Sharon Tailors Admin Panel.</p>
+        <p className="text-gray-500 font-medium">Welcome back to Lycaronz Designs Admin Panel.</p>
       </header>
 
       {/* Stats Grid */}
@@ -3428,7 +3428,7 @@ const dirs = [
   'prisma',
 ];
 
-console.log('🚀 Creating Sharon Tailors Polished Project...\n');
+console.log('🚀 Creating Lycaronz Designs Polished Project...\n');
 
 // Create directories
 dirs.forEach((dir) => {

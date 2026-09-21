@@ -4,16 +4,20 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { motion } from 'framer-motion';
+import ProductCard from '@/components/ProductCard';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, 
   MessageCircle, 
   ChevronLeft, 
   Star, 
   Clock, 
-  ShieldCheck,
-  Play,
-  Share2
+  Share2, 
+  Ruler, 
+  X, 
+  Sparkles, 
+  Send, 
+  Loader2 
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,7 +28,7 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number;
+  price: number | null;
   category: string;
   imageUrl: string | null;
   video: string | null;
@@ -34,9 +38,12 @@ interface Product {
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping'>('description');
   const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [sizeGuideGender, setSizeGuideGender] = useState<'women' | 'men'>('women');
   const [orderForm, setOrderForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [isOrdering, setIsOrdering] = useState(false);
 
@@ -44,10 +51,17 @@ export default function ProductDetails() {
     async function fetchProduct() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/products/${id}`);
+        const res = await fetch(`/api/products/${id}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           setProduct(data);
+
+          // Fetch related products in the same category
+          const relRes = await fetch(`/api/products?category=${encodeURIComponent(data.category)}`, { cache: 'no-store' });
+          if (relRes.ok) {
+            const relData = await relRes.json();
+            setRelatedProducts(relData.filter((p: Product) => p.id !== data.id).slice(0, 3));
+          }
         }
       } catch (error) {
         console.error('Failed to fetch product:', error);
@@ -59,10 +73,61 @@ export default function ProductDetails() {
     if (id) fetchProduct();
   }, [id]);
 
+  const handleShare = async () => {
+    if (typeof window === 'undefined') return;
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product?.name || 'LYCARONZ DESIGNS Piece',
+          text: `Check out ${product?.name} from LYCARONZ DESIGNS Haute Couture!`,
+          url,
+        });
+        return;
+      } catch {
+        // user cancelled or share failed, fallback to clipboard
+      }
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success('Product link copied to clipboard!');
+  };
+
+  const handleOrderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orderForm.name || !orderForm.phone) {
+      toast.error('Please provide your name and phone number.');
+      return;
+    }
+
+    setIsOrdering(true);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product?.id, ...orderForm }),
+      });
+      if (res.ok) {
+        toast.success('Inquiry submitted! Our master atelier will contact you shortly.');
+        setIsOrderOpen(false);
+        setOrderForm({ name: '', email: '', phone: '', message: '' });
+      } else {
+        const err = await res.json();
+        toast.error(err?.error || 'Failed to send inquiry.');
+      }
+    } catch {
+      toast.error('Network error. Please try again or chat with us on WhatsApp.');
+    } finally {
+      setIsOrdering(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-amber-500" size={44} />
+          <span className="text-xs font-black uppercase tracking-widest text-gray-500">Loading Atelier Piece...</span>
+        </div>
       </div>
     );
   }
@@ -71,264 +136,565 @@ export default function ProductDetails() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-          <h1 className="text-4xl font-black text-gray-900 mb-4 uppercase tracking-tighter">Product Not Found</h1>
-          <p className="text-gray-500 mb-8 font-medium">The product you are looking for does not exist or has been removed.</p>
-          <Link href="/products" className="btn-primary px-10 py-4">Back to Collection</Link>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAF8F5] px-4 pt-28">
+          <div className="text-center max-w-md">
+            <h1 className="text-3xl font-black text-gray-900 mb-3 uppercase tracking-tight">Piece Not Found</h1>
+            <p className="text-gray-500 text-sm mb-6 font-medium">The garment you are looking for is currently unavailable or has been archived.</p>
+            <Link href="/products" className="btn-dark">
+              Explore Collection
+            </Link>
+          </div>
         </div>
         <Footer />
       </>
     );
   }
 
+  const formattedPrice = product.price && product.price > 0 
+    ? `UGX ${product.price.toLocaleString()}` 
+    : 'Custom Quote';
+
   const whatsappLink = `https://wa.me/${BUSINESS_INFO.primaryWhatsappRaw}?text=${encodeURIComponent(
-    `Hi Lycaronz Designs! I am interested in "${product.name}"${product.price ? ` (UGX ${product.price.toLocaleString()})` : ''}. Could you provide more details?`
+    `Hello Lycaronz Designs! I am interested in "${product.name}" (${formattedPrice}). Could you please share details on bespoke fitting & ordering?`
   )}`;
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
+    <div className="bg-[#FAF8F5] min-h-screen flex flex-col selection:bg-amber-400 selection:text-black">
       <Navbar />
 
-      <main className="pt-28 sm:pt-36 pb-20 flex-grow">
+      <main className="pt-24 xs:pt-28 sm:pt-36 pb-20 flex-grow">
         <div className="container-custom">
-          {/* Breadcrumbs */}
-          <div className="mb-10">
-            <Link href="/products" className="group flex items-center gap-2 text-gray-400 hover:text-primary transition-all font-bold uppercase tracking-widest text-xs">
+          {/* Breadcrumbs Navigation */}
+          <div className="mb-6 sm:mb-8">
+            <Link 
+              href="/products" 
+              className="group inline-flex items-center gap-1.5 text-gray-500 hover:text-amber-600 transition-colors font-bold uppercase tracking-widest text-xs"
+            >
               <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-              Back to Collection
+              <span>Back to Collection</span>
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            {/* Product Media */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
+            
+            {/* Left Column: Media Gallery */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="lg:col-span-6 space-y-5"
             >
-              <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl bg-gray-100 group">
+              {/* Primary Image Frame */}
+              <div className="relative aspect-[4/5] rounded-2xl sm:rounded-[2.5rem] overflow-hidden shadow-xl bg-white border border-gray-200/80 group">
                 {product.imageUrl ? (
                   <Image
                     src={product.imageUrl}
                     alt={product.name}
                     fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    unoptimized
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
-                    <ShoppingBag size={100} strokeWidth={1} />
+                  <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-gray-100">
+                    <ShoppingBag size={80} className="text-gray-300 mb-3" />
+                    <span className="font-black text-gray-400 uppercase tracking-widest text-xs">{product.name}</span>
                   </div>
                 )}
                 
                 {product.featured && (
-                  <div className="absolute top-8 left-8 bg-white/90 backdrop-blur-md px-6 py-2 rounded-full shadow-xl">
-                    <span className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                      <Star size={14} className="fill-primary" />
-                      Featured Piece
+                  <div className="absolute top-4 left-4 bg-[#0A0D1F]/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-amber-400/40 shadow-lg">
+                    <span className="text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center gap-1.5">
+                      <Star size={12} className="fill-amber-400 text-amber-400" />
+                      Featured Atelier Piece
                     </span>
                   </div>
                 )}
 
-                <button className="absolute top-8 right-8 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-gray-900 shadow-xl hover:bg-white transition-all active:scale-90">
-                  <Share2 size={20} />
+                <button 
+                  onClick={handleShare}
+                  aria-label="Share this garment"
+                  className="absolute top-4 right-4 w-10 h-10 bg-white/90 hover:bg-white text-gray-900 rounded-full flex items-center justify-center shadow-md backdrop-blur-sm transition-all active:scale-95"
+                >
+                  <Share2 size={18} />
                 </button>
               </div>
 
+              {/* Optional Video Preview */}
               {product.video && (
-                <div className="relative aspect-video rounded-3xl overflow-hidden shadow-xl bg-black group cursor-pointer">
+                <div className="relative aspect-video rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg bg-black border border-white/10 group">
                   <video 
                     src={product.video} 
-                    className="w-full h-full object-cover opacity-100 group-hover:opacity-100 transition-opacity"
+                    poster={product.imageUrl || undefined}
+                    preload="metadata"
+                    className="w-full h-full object-cover"
                     controls
                     playsInline
                   />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 group-hover:scale-110 transition-transform">
-                      <Play size={24} fill="white" />
-                    </div>
-                  </div>
-                  <div className="absolute bottom-4 left-6">
-                    <span className="text-white font-black uppercase tracking-widest text-[10px]">Watch Showcase</span>
+                  <div className="absolute top-3 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-black uppercase tracking-widest">
+                    Motion Showcase
                   </div>
                 </div>
               )}
             </motion.div>
 
-            {/* Product Info */}
+            {/* Right Column: Garment Information & CTAs */}
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex flex-col h-full"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="lg:col-span-6 flex flex-col"
             >
-              <div className="mb-2">
-                <span className="px-4 py-1.5 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest rounded-full">
+              {/* Category Pill */}
+              <div className="mb-3">
+                <span className="px-3.5 py-1.5 bg-[#0A0D1F] text-amber-300 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-amber-400/30">
                   {product.category}
                 </span>
               </div>
               
-              <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 uppercase leading-[0.9] tracking-tight">
+              {/* Product Title */}
+              <h1 className="text-3xl sm:text-5xl font-black text-gray-900 mb-4 uppercase leading-[0.95] tracking-tight">
                 {product.name}
               </h1>
 
-              <div className="flex items-center gap-4 mb-8">
-                <p className="text-4xl font-black text-primary">
-                  UGX {product.price.toLocaleString()}
+              {/* Price & Rating */}
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6 mb-6 pb-6 border-b border-gray-200">
+                <p className="text-2xl sm:text-4xl font-black text-gray-950">
+                  {formattedPrice}
                 </p>
-                <div className="h-8 w-[1px] bg-gray-200"></div>
-                <div className="flex items-center gap-1 text-yellow-500">
-                  {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={16} fill="currentColor" />)}
-                  <span className="text-gray-400 text-xs font-bold ml-2">(4.9/5 Rating)</span>
+                <div className="h-6 w-[1px] bg-gray-300 hidden sm:block" />
+                <div className="flex items-center gap-1 text-amber-400">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} size={15} className="fill-amber-400" />
+                  ))}
+                  <span className="text-gray-500 text-xs font-bold ml-1.5">Master Tailoring</span>
                 </div>
               </div>
 
-              {/* Tabs */}
-              <div className="flex border-b border-gray-100 mb-8">
-                {['description', 'specifications', 'shipping'].map((tab) => (
+              {/* Information Tabs */}
+              <div className="flex border-b border-gray-200 mb-6 gap-2">
+                {[
+                  { id: 'description', label: 'Description' },
+                  { id: 'specifications', label: 'Craft & Fabric' },
+                  { id: 'shipping', label: 'Atelier Delivery' },
+                ].map((tab) => (
                   <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-4 px-6 text-[10px] font-black uppercase tracking-widest transition-all relative ${
-                      activeTab === tab ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`pb-3 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all relative ${
+                      activeTab === tab.id 
+                        ? 'text-gray-950 font-black' 
+                        : 'text-gray-400 hover:text-gray-700'
                     }`}
                   >
-                    {tab}
-                    {activeTab === tab && (
-                      <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />
+                    {tab.label}
+                    {activeTab === tab.id && (
+                      <motion.div 
+                        layoutId="productTabIndicator" 
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-full" 
+                      />
                     )}
                   </button>
                 ))}
               </div>
 
-              <div className="mb-12 min-h-[100px]">
+              {/* Tab Content Display */}
+              <div className="mb-8 min-h-[90px]">
                 {activeTab === 'description' && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-gray-600 text-lg leading-relaxed font-medium">
-                    {product.description || "No description provided for this exquisite piece. Each Lycaronz Designs garment is handcrafted with precision and care to ensure a perfect fit and timeless style."}
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-gray-600 text-sm sm:text-base leading-relaxed font-medium">
+                    {product.description || "Each LYCARONZ DESIGNS garment is handcrafted with precision, balance, and utmost care to ensure a flattering signature silhouette."}
                   </motion.p>
                 )}
                 {activeTab === 'specifications' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-4">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-3">
                     {[
-                      { label: 'Material', value: 'Premium Fabrics' },
-                      { label: 'Technique', value: 'Handcrafted' },
-                      { label: 'Origin', value: 'Kampala, Uganda' },
-                      { label: 'Style', value: 'Custom Design' }
+                      { label: 'Origin', value: 'Jemba Plaza, Kampala' },
+                      { label: 'Fabric Type', value: 'Premium Grade Textiles' },
+                      { label: 'Construction', value: 'Bespoke Hand-Stitched' },
+                      { label: 'Fit Silhouette', value: 'Tailored to Measurements' }
                     ].map((spec) => (
-                      <div key={spec.label} className="p-4 bg-gray-50 rounded-2xl">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{spec.label}</p>
-                        <p className="font-bold text-gray-900">{spec.value}</p>
+                      <div key={spec.label} className="p-3 bg-white border border-gray-200/80 rounded-xl">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{spec.label}</p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 mt-0.5">{spec.value}</p>
                       </div>
                     ))}
                   </motion.div>
                 )}
                 {activeTab === 'shipping' && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-gray-600 text-lg leading-relaxed font-medium">
-                    We offer standard delivery within Kampala in 1-2 business days. For custom tailoring, please allow 7-14 days for production. Pick up is also available at Jemba Plaza.
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-gray-600 text-sm sm:text-base leading-relaxed font-medium">
+                    Standard delivery within Kampala available in 1-2 business days. For bespoke custom tailored orders, please allow 5-10 business days for complete crafting and final fitting. Pickup and fitting sessions are welcomed directly at Jemba Plaza Atelier.
                   </motion.p>
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="space-y-4 mt-auto">
-                <div className="grid grid-cols-1 gap-4">
+              {/* Action Buttons */}
+              <div className="space-y-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={() => setIsOrderOpen(true)}
-                    className="w-full btn-primary !bg-[#FF6B6B] !border-[#FF6B6B] py-6 rounded-[2rem] text-xl flex items-center justify-center gap-4 shadow-2xl active:scale-95"
+                    className="btn-gold py-4 text-xs sm:text-sm"
                   >
-                    <ShoppingBag size={28} />
-                    BUY / ENQUIRE
+                    <ShoppingBag size={18} />
+                    <span>Order / Inquire Now</span>
                   </button>
+
                   <a 
                     href={whatsappLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full btn-primary !bg-[#25D366] !border-[#25D366] py-6 rounded-[2rem] text-xl flex items-center justify-center gap-4 shadow-2xl active:scale-95"
+                    className="inline-flex items-center justify-center gap-2 py-4 px-6 rounded-xl sm:rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-xs sm:text-sm uppercase tracking-widest shadow-xl active:scale-95 transition-all text-center"
                   >
-                    <MessageCircle size={28} />
-                    ORDER ON WHATSAPP
+                    <MessageCircle size={18} />
+                    <span>Order on WhatsApp</span>
                   </a>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <Link 
-                      href="/book-appointment" 
-                      className="flex items-center justify-center gap-2 py-5 rounded-[2rem] bg-gray-100 text-gray-900 font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all active:scale-95"
-                    >
-                      <Clock size={18} />
-                      Book Fitting
-                    </Link>
-                    <button className="flex items-center justify-center gap-2 py-5 rounded-[2rem] bg-white border border-gray-200 text-gray-900 font-black text-xs uppercase tracking-widest hover:border-primary hover:text-primary transition-all active:scale-95">
-                      <ShieldCheck size={18} />
-                      Size Guide
-                    </button>
-                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <Link 
+                    href="/book-appointment" 
+                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white border border-gray-200 text-gray-900 font-black text-[11px] sm:text-xs uppercase tracking-widest hover:border-amber-400 transition-all text-center"
+                  >
+                    <Clock size={16} className="text-amber-500" />
+                    <span>Book Fitting</span>
+                  </Link>
+
+                  <button 
+                    onClick={() => setIsSizeGuideOpen(true)}
+                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white border border-gray-200 text-gray-900 font-black text-[11px] sm:text-xs uppercase tracking-widest hover:border-amber-400 transition-all text-center"
+                  >
+                    <Ruler size={16} className="text-blue-500" />
+                    <span>Size Guide</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Order Modal */}
-              {isOrderOpen && (
-                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                  <div className="absolute inset-0 bg-black/60" onClick={() => setIsOrderOpen(false)} />
-                  <div className="relative w-full max-w-lg bg-white rounded-[2rem] p-8 shadow-2xl">
-                    <h3 className="text-2xl font-black mb-4">Buy / Enquire about &quot;{product?.name}&quot;</h3>
-                    <form onSubmit={async (e) => {
-                      e.preventDefault();
-                      setIsOrdering(true);
-                      try {
-                        const res = await fetch('/api/orders', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ productId: product?.id, ...orderForm }),
-                        });
-                        if (res.ok) {
-                        await res.json();
-                          toast.success('Inquiry sent — we will contact you soon');
-                          setIsOrderOpen(false);
-                          setOrderForm({ name: '', email: '', phone: '', message: '' });
-                        } else {
-                          const err = await res.json();
-                          toast.error(err?.error || 'Failed to send inquiry');
-                        }
-                      } catch (err) {
-                        console.error(err);
-                        toast.error('Network error');
-                      } finally {
-                        setIsOrdering(false);
-                      }
-                    }} className="space-y-4">
-                      <input required value={orderForm.name} onChange={(e) => setOrderForm({...orderForm, name: e.target.value})} placeholder="Your full name" className="input-field w-full" />
-                      <input value={orderForm.email} onChange={(e) => setOrderForm({...orderForm, email: e.target.value})} placeholder="Email (optional)" className="input-field w-full" />
-                      <input required value={orderForm.phone} onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})} placeholder="Phone number" className="input-field w-full" />
-                      <textarea value={orderForm.message} onChange={(e) => setOrderForm({...orderForm, message: e.target.value})} placeholder="Message / preferences" className="input-field w-full h-24" />
-                      <div className="flex justify-end gap-4">
-                        <button type="button" onClick={() => setIsOrderOpen(false)} className="px-6 py-3 rounded-full bg-gray-100">Cancel</button>
-                        <button type="submit" disabled={isOrdering} className="px-6 py-3 rounded-full bg-primary text-white">{isOrdering ? 'Sending...' : 'Send Inquiry'}</button>
-                      </div>
-                    </form>
-                  </div>
+              {/* Atelier Trust Features */}
+              <div className="mt-8 pt-6 border-t border-gray-200 grid grid-cols-3 gap-2 text-center">
+                <div className="p-2 bg-white rounded-xl border border-gray-100">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Craft</p>
+                  <p className="text-xs font-bold text-gray-900 mt-0.5">Handcrafted</p>
                 </div>
-              )}
-
-              {/* Security Badges */}
-              <div className="mt-10 flex justify-between items-center px-4 py-6 border-y border-gray-100">
-                <div className="text-center">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Handmade</p>
-                  <p className="text-xs font-bold text-gray-900">With Love</p>
+                <div className="p-2 bg-white rounded-xl border border-gray-100">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Delivery</p>
+                  <p className="text-xs font-bold text-gray-900 mt-0.5">Kampala &amp; Beyond</p>
                 </div>
-                <div className="h-8 w-[1px] bg-gray-100"></div>
-                <div className="text-center">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Delivery</p>
-                  <p className="text-xs font-bold text-gray-900">Nationwide</p>
-                </div>
-                <div className="h-8 w-[1px] bg-gray-100"></div>
-                <div className="text-center">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Support</p>
-                  <p className="text-xs font-bold text-gray-900">24/7 Chat</p>
+                <div className="p-2 bg-white rounded-xl border border-gray-100">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Atelier</p>
+                  <p className="text-xs font-bold text-gray-900 mt-0.5">Jemba Plaza</p>
                 </div>
               </div>
             </motion.div>
           </div>
+
+          {/* Related / Similar Creations Section */}
+          {relatedProducts.length > 0 && (
+            <div className="mt-16 sm:mt-24 pt-12 border-t border-gray-200">
+              <div className="flex justify-between items-end mb-8">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 block mb-1">
+                    Matching Atelier Styles
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight">
+                    You May Also Adore
+                  </h2>
+                </div>
+                <Link href="/products" className="text-xs font-black uppercase tracking-widest text-primary hover:underline">
+                  View All &rarr;
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {relatedProducts.map((p) => (
+                  <ProductCard key={p.id} {...p} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Buy / Enquire Modal */}
+      <AnimatePresence>
+        {isOrderOpen && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 xs:p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsOrderOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-200 z-10 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 block">
+                    Bespoke Inquiry
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tight">
+                    Order &quot;{product?.name}&quot;
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Our team will contact you to confirm sizing, fabric options, and fitting schedule.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setIsOrderOpen(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleOrderSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-gray-600 mb-1">
+                    Full Name *
+                  </label>
+                  <input 
+                    required 
+                    value={orderForm.name} 
+                    onChange={(e) => setOrderForm({...orderForm, name: e.target.value})} 
+                    placeholder="e.g. John Okello" 
+                    className="input-field" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-gray-600 mb-1">
+                    Phone / WhatsApp Number *
+                  </label>
+                  <input 
+                    required 
+                    value={orderForm.phone} 
+                    onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})} 
+                    placeholder="e.g. +256 705 241 179" 
+                    className="input-field" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-gray-600 mb-1">
+                    Email Address (Optional)
+                  </label>
+                  <input 
+                    type="email"
+                    value={orderForm.email} 
+                    onChange={(e) => setOrderForm({...orderForm, email: e.target.value})} 
+                    placeholder="e.g. name@example.com" 
+                    className="input-field" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-gray-600 mb-1">
+                    Custom Requests &amp; Sizing Notes
+                  </label>
+                  <textarea 
+                    value={orderForm.message} 
+                    onChange={(e) => setOrderForm({...orderForm, message: e.target.value})} 
+                    placeholder="Share any special preferences, height, preferred date for fitting..." 
+                    rows={3}
+                    className="input-field resize-none" 
+                  />
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row justify-end gap-3">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsOrderOpen(false)} 
+                    className="px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold text-xs uppercase tracking-wider"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={isOrdering} 
+                    className="btn-gold"
+                  >
+                    {isOrdering ? (
+                      <>
+                        <Loader2 className="animate-spin" size={16} />
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={16} />
+                        <span>Submit Atelier Inquiry</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Interactive Size Guide Modal */}
+      <AnimatePresence>
+        {isSizeGuideOpen && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 xs:p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsSizeGuideOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-200 z-10 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 block">
+                    Measurement Chart
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tight">
+                    LYCARONZ Size Guide
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Standard garment measurements. For custom fit, our tailors measure you in person.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setIsSizeGuideOpen(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Gender Toggle */}
+              <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-6">
+                <button
+                  onClick={() => setSizeGuideGender('women')}
+                  className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all ${
+                    sizeGuideGender === 'women'
+                      ? 'bg-white text-gray-950 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Women&apos;s Couture
+                </button>
+                <button
+                  onClick={() => setSizeGuideGender('men')}
+                  className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all ${
+                    sizeGuideGender === 'men'
+                      ? 'bg-white text-gray-950 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Men&apos;s Suiting
+                </button>
+              </div>
+
+              {sizeGuideGender === 'women' ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200 text-gray-500 uppercase tracking-wider text-[10px]">
+                        <th className="py-2.5 px-3">Size</th>
+                        <th className="py-2.5 px-3">Bust (in)</th>
+                        <th className="py-2.5 px-3">Waist (in)</th>
+                        <th className="py-2.5 px-3">Hips (in)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 font-medium text-gray-800">
+                      <tr>
+                        <td className="py-2.5 px-3 font-bold">Small (S / 8-10)</td>
+                        <td className="py-2.5 px-3">34 - 36</td>
+                        <td className="py-2.5 px-3">26 - 28</td>
+                        <td className="py-2.5 px-3">36 - 38</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 font-bold">Medium (M / 12-14)</td>
+                        <td className="py-2.5 px-3">37 - 39</td>
+                        <td className="py-2.5 px-3">29 - 31</td>
+                        <td className="py-2.5 px-3">39 - 41</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 font-bold">Large (L / 16-18)</td>
+                        <td className="py-2.5 px-3">40 - 43</td>
+                        <td className="py-2.5 px-3">32 - 35</td>
+                        <td className="py-2.5 px-3">42 - 45</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 font-bold">XL (20+)</td>
+                        <td className="py-2.5 px-3">44 - 48</td>
+                        <td className="py-2.5 px-3">36 - 40</td>
+                        <td className="py-2.5 px-3">46 - 50</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200 text-gray-500 uppercase tracking-wider text-[10px]">
+                        <th className="py-2.5 px-3">Suit Size</th>
+                        <th className="py-2.5 px-3">Chest (in)</th>
+                        <th className="py-2.5 px-3">Waist (in)</th>
+                        <th className="py-2.5 px-3">Sleeve (in)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 font-medium text-gray-800">
+                      <tr>
+                        <td className="py-2.5 px-3 font-bold">38 Regular</td>
+                        <td className="py-2.5 px-3">38</td>
+                        <td className="py-2.5 px-3">32</td>
+                        <td className="py-2.5 px-3">33</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 font-bold">40 Regular</td>
+                        <td className="py-2.5 px-3">40</td>
+                        <td className="py-2.5 px-3">34</td>
+                        <td className="py-2.5 px-3">33.5</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 font-bold">42 Regular</td>
+                        <td className="py-2.5 px-3">42</td>
+                        <td className="py-2.5 px-3">36</td>
+                        <td className="py-2.5 px-3">34</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2.5 px-3 font-bold">44 Regular</td>
+                        <td className="py-2.5 px-3">44</td>
+                        <td className="py-2.5 px-3">38</td>
+                        <td className="py-2.5 px-3">34.5</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="mt-6 p-4 rounded-2xl bg-amber-50 border border-amber-200/60 text-xs text-amber-900 flex items-start gap-3">
+                <Sparkles size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                <p>
+                  <strong>Custom Fit Recommendation:</strong> Since all our pieces are bespoke, we recommend booking a quick fitting at Jemba Plaza for complete perfection.
+                </p>
+              </div>
+
+              <div className="mt-6 text-right">
+                <button
+                  onClick={() => setIsSizeGuideOpen(false)}
+                  className="px-6 py-2.5 rounded-xl bg-gray-900 text-white font-bold text-xs uppercase tracking-wider"
+                >
+                  Got It
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>

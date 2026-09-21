@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { revalidatePath } from 'next/cache';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   _request: NextRequest,
@@ -15,7 +18,9 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    return NextResponse.json(product);
+    return NextResponse.json(product, {
+      headers: { 'Cache-Control': 'no-store, must-revalidate' },
+    });
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json(
@@ -40,22 +45,29 @@ export async function PUT(
     const product = await prisma.product.update({
       where: { id: params.id },
       data: {
-        name: data.name,
-        description: data.description,
+        name: data.name ? String(data.name).trim() : undefined,
+        description: data.description ? String(data.description).trim() : null,
         price: data.price ? parseFloat(data.price) : undefined,
         category: data.category,
-        image: data.image,
-        imageUrl: data.imageUrl,
-        video: data.video,
-        featured: data.featured,
+        image: data.image || null,
+        imageUrl: data.imageUrl || null,
+        video: data.video || null,
+        featured: data.featured !== undefined ? Boolean(data.featured) : undefined,
       },
     });
 
-    return NextResponse.json(product);
+    // Revalidate public pages so updated product appears immediately
+    revalidatePath('/');
+    revalidatePath('/products');
+    revalidatePath(`/product/${params.id}`);
+
+    return NextResponse.json(product, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch (error) {
     console.error('Error updating product:', error);
     return NextResponse.json(
-      { error: 'Failed to update product' },
+      { error: 'Failed to update product. Please try again.' },
       { status: 500 }
     );
   }
@@ -75,11 +87,17 @@ export async function DELETE(
       where: { id: params.id },
     });
 
-    return NextResponse.json({ message: 'Product deleted' });
+    // Revalidate public pages so deleted product is removed immediately
+    revalidatePath('/');
+    revalidatePath('/products');
+
+    return NextResponse.json({ message: 'Product deleted successfully' }, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch (error) {
     console.error('Error deleting product:', error);
     return NextResponse.json(
-      { error: 'Failed to delete product' },
+      { error: 'Failed to delete product. Please try again.' },
       { status: 500 }
     );
   }

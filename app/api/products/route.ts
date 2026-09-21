@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { revalidatePath } from 'next/cache';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,7 +20,12 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(products);
+    return NextResponse.json(products, {
+      headers: {
+        // Prevent browser and CDN caching so public site always gets fresh data
+        'Cache-Control': 'no-store, must-revalidate',
+      },
+    });
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
@@ -38,29 +46,36 @@ export async function POST(request: NextRequest) {
 
     if (!data.name || !data.price || !data.category) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: name, price, and category are required.' },
         { status: 400 }
       );
     }
 
     const product = await prisma.product.create({
       data: {
-        name: data.name,
-        description: data.description,
+        name: String(data.name).trim(),
+        description: data.description ? String(data.description).trim() : null,
         price: parseFloat(data.price),
         category: data.category,
-        image: data.image,
-        imageUrl: data.imageUrl,
-        video: data.video,
-        featured: data.featured || false,
+        image: data.image || null,
+        imageUrl: data.imageUrl || null,
+        video: data.video || null,
+        featured: Boolean(data.featured),
       },
     });
 
-    return NextResponse.json(product, { status: 201 });
+    // Immediately revalidate public pages so new product appears without server restart
+    revalidatePath('/');
+    revalidatePath('/products');
+
+    return NextResponse.json(product, {
+      status: 201,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch (error) {
     console.error('Error creating product:', error);
     return NextResponse.json(
-      { error: 'Failed to create product' },
+      { error: 'Failed to create product. Please try again.' },
       { status: 500 }
     );
   }

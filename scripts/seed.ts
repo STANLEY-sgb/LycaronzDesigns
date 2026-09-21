@@ -10,10 +10,10 @@ async function main() {
   // Create admin user
   try {
     const admin = await prisma.user.upsert({
-      where: { email: 'admin@sharrontailors.com' },
+      where: { email: 'admin@lycaronzdesigns.com' },
       update: {},
       create: {
-        email: 'admin@sharrontailors.com',
+        email: 'admin@lycaronzdesigns.com',
         password: await hashPassword('AdminPassword123!'),
         name: 'Admin',
         isAdmin: true,
@@ -87,7 +87,7 @@ async function main() {
 
   console.log('\n🎉 Database seed completed!');
   console.log('\n📝 Default Admin Account:');
-  console.log('   Email: admin@sharrontailors.com');
+  console.log('   Email: admin@lycaronzdesigns.com');
   console.log('   Password: AdminPassword123!');
   console.log('\n⚠️  IMPORTANT: Change the admin password after first login!');
 }

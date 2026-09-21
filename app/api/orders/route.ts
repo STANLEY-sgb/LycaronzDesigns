@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import nodemailer from 'nodemailer';
 import { auth } from '@/auth';
+import { sendOrderNotification } from '@/lib/email';
 
 export async function GET() {
-  // Admin-only: return recent orders
   const session = await auth();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -20,55 +19,56 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const { productId, name, email, phone, message } = data;
+
+    // ── Sanitize & validate ────────────────────────────────────────────────
+    const productId = String(data.productId || '').trim();
+    const name = String(data.name || '').trim();
+    const phone = String(data.phone || '').trim();
+    const email = data.email ? String(data.email).trim() : null;
+    const message = data.message ? String(data.message).trim() : null;
 
     if (!productId || !name || !phone) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
     }
 
-    // ensure product exists
+    // ── Ensure product exists ─────────────────────────────────────────────
     const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product) return NextResponse.json({ error: 'Invalid product' }, { status: 400 });
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
+    }
 
+    // ── Save to database ──────────────────────────────────────────────────
     const order = await prisma.order.create({
       data: {
         productId,
         name,
-        email: email || null,
+        email,
         phone,
-        message: message || null,
+        message,
       },
     });
 
-    // send email notification if SMTP configured
-    const smtpHost = process.env.SMTP_HOST;
-    if (smtpHost) {
-      try {
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: Number(process.env.SMTP_PORT) || 587,
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
-        });
-
-        const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || 'info.sharontylors@gmail.com';
-
-        await transporter.sendMail({
-          from: process.env.FROM_EMAIL || 'no-reply@sharon-tailors.com',
-          to: adminEmail,
-          subject: `New Order / Inquiry for ${product.name}`,
-          text: `New inquiry from ${name} (${phone}, ${email || 'no email provided'})\n\nProduct: ${product.name}\nMessage: ${message || '-'}\n\nView in admin panel: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/admin/orders`,
-        });
-      } catch (err) {
-        console.error('Failed to send email notification:', err);
-      }
-    } else {
-      console.log('SMTP not configured — skipping email send. Order created:', order.id);
-    }
+    // ── Send notification email (non-blocking) ────────────────────────────
+    sendOrderNotification({
+      id: order.id,
+      name: order.name,
+      email: order.email,
+      phone: order.phone,
+      message: order.message,
+      productName: product.name,
+      productPrice: product.price,
+      productCategory: product.category,
+      createdAt: order.createdAt,
+    }).catch((err) => {
+      console.error('[EMAIL] Failed to send order notification:', err?.message || err);
+    });
 
     return NextResponse.json(order, { status: 201 });
   } catch (error) {
     console.error('Create order error:', error);
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create inquiry. Please try again.' },
+      { status: 500 }
+    );
   }
 }

@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { isValidEmail, isValidPhone } from '@/lib/auth';
 import { auth } from '@/auth';
 import { sendAppointmentNotification } from '@/lib/email';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -27,6 +30,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rate = checkRateLimit(`appointment:${ip}`, 5, 60_000);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: 'Too many appointment requests. Please wait a moment before trying again.' },
+        { status: 429 }
+      );
+    }
+
     const data = await request.json();
 
     // ── Validate ───────────────────────────────────────────────────────────
@@ -69,20 +81,25 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // ── Send email notification (non-blocking — DB record is preserved if email fails) ──
-    sendAppointmentNotification({
-      id: appointment.id,
-      name: appointment.name,
-      phone: appointment.phone,
-      email: appointment.email,
-      date: appointment.date,
-      service: appointment.service,
-      notes: appointment.notes,
-      status: appointment.status,
-      createdAt: appointment.createdAt,
-    }).catch((err) => {
-      console.error('[EMAIL] Failed to send appointment notification:', err?.message || err);
-    });
+    // ── Send email notification (awaited with error isolation) ───────────
+    try {
+      await sendAppointmentNotification({
+        id: appointment.id,
+        name: appointment.name,
+        phone: appointment.phone,
+        email: appointment.email,
+        date: appointment.date,
+        service: appointment.service,
+        notes: appointment.notes,
+        status: appointment.status,
+        createdAt: appointment.createdAt,
+      });
+    } catch (emailErr) {
+      console.error('[APPOINTMENT_EMAIL_FAILED]', {
+        id: appointment.id,
+        error: emailErr instanceof Error ? emailErr.message : String(emailErr),
+      });
+    }
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {

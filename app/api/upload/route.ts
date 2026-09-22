@@ -19,6 +19,8 @@ function sanitizeFilename(name: string): string {
     .substring(0, 200);
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request): Promise<NextResponse> {
   const session = await auth();
   if (!session) {
@@ -44,12 +46,23 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   try {
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-    const useBlob = blobToken && !blobToken.includes('your-');
+    const useBlob = Boolean(blobToken && !blobToken.includes('your-'));
 
     if (useBlob) {
-      // Vercel Blob (production) — stream directly, size enforced by Blob service
-      const blob = await put(filename, request.body as ReadableStream, { access: 'public' });
+      // Vercel Blob (production) — stream directly
+      const blob = await put(filename, request.body as ReadableStream, {
+        access: 'public',
+        addRandomSuffix: true,
+      });
       return NextResponse.json({ url: blob.url, name: filename });
+    }
+
+    // In a Vercel serverless environment, local filesystem writes are ephemeral/read-only
+    if (process.env.VERCEL) {
+      return NextResponse.json(
+        { error: 'Vercel Blob storage is not configured. Please set BLOB_READ_WRITE_TOKEN in your Vercel project environment variables.' },
+        { status: 500 }
+      );
     }
 
     // Local development: read body and validate size
@@ -77,7 +90,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     await fs.promises.writeFile(filePath, buffer);
 
     // Build absolute URL for local dev
-    const baseUrl = (process.env.NEXTAUTH_URL || 'http://localhost:3001').replace(/\/$/, '');
+    const baseUrl = (process.env.NEXTAUTH_URL || process.env.AUTH_URL || 'http://localhost:3000').replace(/\/$/, '');
     const url = `${baseUrl}/uploads/${uniqueName}`;
 
     return NextResponse.json({ url, path: `/uploads/${uniqueName}`, name: uniqueName });

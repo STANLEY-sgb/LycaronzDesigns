@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 /**
- * Node.js runtime middleware for LYCARONZ DESIGNS.
- * Runs on the Node.js runtime to eliminate Edge runtime deprecation warnings,
- * using `getToken` from next-auth/jwt for fast token-based route protection.
+ * Edge-compatible middleware for LYCARONZ DESIGNS.
+ * Uses `getToken` from next-auth/jwt for fast JWT-based route protection.
+ * Middleware always runs on the Edge runtime in Next.js — no runtime config key is needed.
  */
 export async function middleware(req: NextRequest) {
   const token = await getToken({
@@ -34,6 +34,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  runtime: 'nodejs',
   matcher: ['/admin/:path*', '/api/admin/:path*'],
 };

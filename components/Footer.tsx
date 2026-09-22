@@ -20,7 +20,7 @@ export default function Footer() {
   )}`;
 
   return (
-    <footer className="bg-[#0A0D1F] text-white border-t border-white/10 pt-14 sm:pt-16 pb-10 sm:pb-12 overflow-hidden relative">
+    <footer className="bg-[#0A0D1F] text-white border-t border-white/10 pt-14 sm:pt-16 pb-24 md:pb-12 overflow-hidden relative">
       {/* Subtle ambient lighting */}
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
       <div className="absolute top-0 left-1/4 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />

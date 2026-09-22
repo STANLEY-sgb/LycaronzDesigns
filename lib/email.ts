@@ -24,6 +24,19 @@ function createTransporter() {
   });
 }
 
+/**
+ * Returns the canonical base URL for the application.
+ * In production this MUST be set via NEXTAUTH_URL (or AUTH_URL) in env vars.
+ * Falls back to localhost only for local development.
+ */
+function getBaseUrl(): string {
+  return (
+    process.env.NEXTAUTH_URL ||
+    process.env.AUTH_URL ||
+    'http://localhost:3000'
+  ).replace(/\/$/, ''); // strip trailing slash
+}
+
 // ─── Timezone helper ─────────────────────────────────────────────────────────
 function formatEAT(date: Date): string {
   return date.toLocaleString('en-GB', {
@@ -161,7 +174,7 @@ export async function sendAppointmentNotification(appt: AppointmentEmailData): P
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td>
-          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/admin/appointments"
+          <a href="${getBaseUrl()}/admin/appointments"
              style="display:inline-block;background:#0A0D1F;color:#D4AF37;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:12px 24px;border-radius:8px;text-decoration:none;">
             View in Admin Dashboard →
           </a>
@@ -188,7 +201,7 @@ export async function sendAppointmentNotification(appt: AppointmentEmailData): P
     to: EMAIL_TO,
     replyTo: appt.email || undefined,
     subject: `New Appointment — ${appt.name} — LYCARONZ DESIGNS`,
-    text: `New Appointment Request\n\nRef: ${ref}\nCustomer: ${appt.name}\nPhone: ${appt.phone}\nEmail: ${appt.email || '—'}\nService: ${appt.service}\nPreferred Date: ${preferredDate}\nNotes: ${appt.notes || '—'}\nStatus: ${appt.status}\nSubmitted: ${submittedAt}\n\nView: ${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/admin/appointments`,
+    text: `New Appointment Request\n\nRef: ${ref}\nCustomer: ${appt.name}\nPhone: ${appt.phone}\nEmail: ${appt.email || '—'}\nService: ${appt.service}\nPreferred Date: ${preferredDate}\nNotes: ${appt.notes || '—'}\nStatus: ${appt.status}\nSubmitted: ${submittedAt}\n\nView: ${getBaseUrl()}/admin/appointments`,
     html,
   });
 
@@ -307,7 +320,7 @@ export async function sendOrderNotification(order: OrderEmailData): Promise<void
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td>
-          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/admin/orders"
+          <a href="${getBaseUrl()}/admin/orders"
              style="display:inline-block;background:#0A0D1F;color:#D4AF37;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1px;padding:12px 24px;border-radius:8px;text-decoration:none;">
             View in Admin Dashboard →
           </a>
@@ -334,7 +347,7 @@ export async function sendOrderNotification(order: OrderEmailData): Promise<void
     to: EMAIL_TO,
     replyTo: order.email || undefined,
     subject: `New Product Inquiry — ${order.productName} — LYCARONZ DESIGNS`,
-    text: `New Product Inquiry\n\nRef: ${ref}\nProduct: ${order.productName} (${priceStr})\nCustomer: ${order.name}\nPhone: ${order.phone}\nEmail: ${order.email || '—'}\nMessage: ${order.message || '—'}\nSubmitted: ${submittedAt}\n\nView: ${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/admin/orders`,
+    text: `New Product Inquiry\n\nRef: ${ref}\nProduct: ${order.productName} (${priceStr})\nCustomer: ${order.name}\nPhone: ${order.phone}\nEmail: ${order.email || '—'}\nMessage: ${order.message || '—'}\nSubmitted: ${submittedAt}\n\nView: ${getBaseUrl()}/admin/orders`,
     html,
   });
 

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { sendOrderNotification } from '@/lib/email';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { isValidEmail, isValidPhone } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const session = await auth();
@@ -18,6 +22,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rate = checkRateLimit(`order:${ip}`, 5, 60_000);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a minute before submitting again.' },
+        { status: 429 }
+      );
+    }
+
     const data = await request.json();
 
     // ── Sanitize & validate ────────────────────────────────────────────────
@@ -28,7 +41,15 @@ export async function POST(request: NextRequest) {
     const message = data.message ? String(data.message).trim() : null;
 
     if (!productId || !name || !phone) {
-      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required fields: product, name, and phone are required.' }, { status: 400 });
+    }
+
+    if (!isValidPhone(phone)) {
+      return NextResponse.json({ error: 'Invalid phone number.' }, { status: 400 });
+    }
+
+    if (email && !isValidEmail(email)) {
+      return NextResponse.json({ error: 'Invalid email address.' }, { status: 400 });
     }
 
     // ── Ensure product exists ─────────────────────────────────────────────
@@ -48,20 +69,25 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // ── Send notification email (non-blocking) ────────────────────────────
-    sendOrderNotification({
-      id: order.id,
-      name: order.name,
-      email: order.email,
-      phone: order.phone,
-      message: order.message,
-      productName: product.name,
-      productPrice: product.price,
-      productCategory: product.category,
-      createdAt: order.createdAt,
-    }).catch((err) => {
-      console.error('[EMAIL] Failed to send order notification:', err?.message || err);
-    });
+    // ── Send notification email (awaited with error isolation) ───────────
+    try {
+      await sendOrderNotification({
+        id: order.id,
+        name: order.name,
+        email: order.email,
+        phone: order.phone,
+        message: order.message,
+        productName: product.name,
+        productPrice: product.price,
+        productCategory: product.category,
+        createdAt: order.createdAt,
+      });
+    } catch (emailErr) {
+      console.error('[ORDER_EMAIL_FAILED]', {
+        id: order.id,
+        error: emailErr instanceof Error ? emailErr.message : String(emailErr),
+      });
+    }
 
     return NextResponse.json(order, { status: 201 });
   } catch (error) {

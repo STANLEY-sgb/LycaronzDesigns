@@ -3,19 +3,22 @@ const nextConfig = {
   images: {
     // Serve modern formats (avif, webp) where supported
     formats: ['image/avif', 'image/webp'],
-    // Sensible default quality — reduces file size while maintaining visual quality
+    // Sensible device widths — covers 320px phones through 4K
     deviceSizes: [320, 360, 414, 640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
+      // ── Vercel Blob storage (production uploads) ──────────────────────────
+      // Public blobs are served from *.public.blob.vercel-storage.com
       {
         protocol: 'https',
-        hostname: 'blob.vercelusercontent.com',
+        hostname: '*.public.blob.vercel-storage.com',
       },
+      // ── External image sources ────────────────────────────────────────────
       {
         protocol: 'https',
         hostname: 'images.pexels.com',
       },
-      // Allow local dev uploads served from localhost:3000
+      // ── Local development: uploads served from Next.js dev server ─────────
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -26,7 +29,6 @@ const nextConfig = {
         hostname: '127.0.0.1',
         port: '3000',
       },
-      // Allow local dev uploads served from localhost:3001
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -45,7 +47,8 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    // Run ESLint during builds so regressions are caught in CI/Vercel
+    ignoreDuringBuilds: false,
   },
 };
 

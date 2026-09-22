@@ -94,10 +94,10 @@ async function main() {
     }
   }
 
-  console.log(`\n📦 Products: ${created} created, ${skipped} already existed`);
+  const baseUrl = (process.env.NEXTAUTH_URL || process.env.AUTH_URL || 'http://localhost:3000').replace(/\/$/, '');
   console.log('\n════════════════════════════════════════');
   console.log('  ADMIN PORTAL LOGIN CREDENTIALS');
-  console.log('  URL:      http://localhost:3001/admin/login');
+  console.log(`  URL:      ${baseUrl}/admin/login`);
   console.log(`  Email:    ${email}`);
   console.log(`  Password: ${password}`);
   console.log('════════════════════════════════════════');

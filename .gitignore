@@ -69,4 +69,12 @@ temp/
 
 # Vercel
 .vercel
-"*.mp4" 
+
+# Large media files — kept out of version control
+*.mp4
+*.mov
+*.webm
+*.avi
+
+# TypeScript build info
+tsconfig.tsbuildinfo

@@ -30,7 +30,7 @@
     "next": "14.2.35",
     "next-auth": "5.0.0-beta.25",
     "next-cloudinary": "^6.19.3",
-    "nodemailer": "^7.0.13",
+    "nodemailer": "^6.9.16",
     "pg": "^8.13.0",
     "prisma": "^5.7.1",
     "react": "^18.3.1",

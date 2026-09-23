@@ -1,10 +1,9 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -24,15 +23,14 @@ model Product {
   id          String   @id @default(cuid())
   name        String
   description String?
-  price       Float?   // Optional price
-  category    String   // Men's, Women's, Custom
-  image       String?  // Local file path
-  imageUrl    String?  // Blob storage URL
-  video       String?  // Blob storage URL
+  price       Float?
+  category    String
+  image       String?
+  imageUrl    String?
+  video       String?
   featured    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
   orders      Order[]
 
   @@map("products")
@@ -44,9 +42,9 @@ model Appointment {
   phone     String
   email     String?
   date      DateTime
-  service   String   // Repair, Custom, Fitting
+  service   String
   notes     String?
-  status    String   @default("pending") // pending, confirmed, completed, cancelled
+  status    String   @default("pending")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -56,14 +54,14 @@ model Appointment {
 model Order {
   id        String   @id @default(cuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
   name      String
   email     String?
   phone     String
   message   String?
-  status    String   @default("new") // new, contacted, completed
+  status    String   @default("new")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
 
   @@map("orders")
 }
@@ -75,7 +73,7 @@ model Inquiry {
   phone     String?
   subject   String   @default("General Inquiry")
   message   String?
-  status    String   @default("new") // new, replied
+  status    String   @default("new")
   refId     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

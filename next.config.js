@@ -13,7 +13,7 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.public.blob.vercel-storage.com',
       },
-      // ── Cloudinary storage (production uploads) ──────────────────────────
+      // ── Cloudinary storage (production media) ────────────────────────────
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
@@ -23,7 +23,7 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.pexels.com',
       },
-      // ── Local development: uploads served from Next.js dev server ─────────
+      // ── Local development only ────────────────────────────────────────────
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -33,28 +33,14 @@ const nextConfig = {
         protocol: 'http',
         hostname: '127.0.0.1',
         port: '3000',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '3001',
-        pathname: '/uploads/**',
-      },
-      {
-        protocol: 'http',
-        hostname: '127.0.0.1',
-        port: '3001',
-        pathname: '/uploads/**',
       },
     ],
   },
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    // Run ESLint during builds so regressions are caught in CI/Vercel
-    ignoreDuringBuilds: false,
-  },
+  // Note: eslint key removed — Next.js 14 does not support it in next.config.js.
+  // ESLint configuration lives in .eslintrc.json.
 };
 
 module.exports = nextConfig;

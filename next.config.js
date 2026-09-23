@@ -13,6 +13,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.public.blob.vercel-storage.com',
       },
+      // ── Cloudinary storage (production uploads) ──────────────────────────
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
       // ── External image sources ────────────────────────────────────────────
       {
         protocol: 'https',

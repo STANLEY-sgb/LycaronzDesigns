@@ -44,18 +44,25 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json();
 
-    if (!data.name || !data.price || !data.category) {
+    if (!data.name || !data.category) {
       return NextResponse.json(
-        { error: 'Missing required fields: name, price, and category are required.' },
+        { error: 'Missing required fields: name and category are required.' },
         { status: 400 }
       );
+    }
+
+    const parsedPrice = data.price === '' || data.price === null || data.price === undefined
+      ? null
+      : Number(data.price);
+    if (parsedPrice !== null && Number.isNaN(parsedPrice)) {
+      return NextResponse.json({ error: 'Price must be a number.' }, { status: 400 });
     }
 
     const product = await prisma.product.create({
       data: {
         name: String(data.name).trim(),
         description: data.description ? String(data.description).trim() : null,
-        price: parseFloat(data.price),
+        price: parsedPrice,
         category: data.category,
         image: data.image || null,
         imageUrl: data.imageUrl || null,

@@ -83,9 +83,20 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await prisma.product.delete({
-      where: { id: params.id },
-    });
+    try {
+      await prisma.product.delete({
+        where: { id: params.id },
+      });
+    } catch (deleteError) {
+      const code = (deleteError as { code?: string })?.code;
+      if (code === 'P2003') {
+        return NextResponse.json(
+          { error: 'This product has customer orders and cannot be deleted. Remove those orders first.' },
+          { status: 409 }
+        );
+      }
+      throw deleteError;
+    }
 
     // Revalidate public pages so deleted product is removed immediately
     revalidatePath('/');

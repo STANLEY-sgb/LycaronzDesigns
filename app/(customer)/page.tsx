@@ -39,6 +39,7 @@ interface Product {
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedVideo, setSelectedVideo] = useState<{ src: string; label: string; desc: string } | null>(null);
 
@@ -50,10 +51,16 @@ export default function Home() {
         const res = await fetch('/api/products', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
-          if (isMounted) setProducts(data);
+          if (isMounted) {
+            setProducts(data);
+            setCatalogError('');
+          }
+        } else if (isMounted) {
+          setCatalogError('The catalog could not be loaded from the database. Please try again in a moment.');
         }
       } catch (error) {
         console.error('Failed to fetch products:', error);
+        if (isMounted) setCatalogError('The catalog could not be loaded from the database. Please try again in a moment.');
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -327,6 +334,10 @@ export default function Home() {
               [1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="h-[400px] rounded-3xl bg-gray-100 animate-pulse border border-gray-200" />
               ))
+            ) : catalogError ? (
+              <div className="col-span-full text-center py-16 text-red-600 font-bold text-sm bg-red-50 rounded-3xl border border-dashed border-red-200">
+                {catalogError}
+              </div>
             ) : displayedProducts.length > 0 ? (
               displayedProducts.map((product: Product) => (
                 <ProductCard key={product.id} {...product} />

@@ -10,23 +10,26 @@ async function main() {
   console.log('\n🌱 LYCARONZ DESIGNS — Database Seed\n');
 
   // ── Admin user ───────────────────────────────────────────────
-  const email = process.env.ADMIN_EMAIL || 'admin@lycaronzdesigns.com';
-  const password = process.env.ADMIN_PASSWORD || 'AdminPassword123!';
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
 
-  const hashedPassword = await hash(password, 10);
-
-  const admin = await prisma.user.upsert({
-    where: { email },
-    update: { password: hashedPassword, isAdmin: true },
-    create: {
-      email,
-      password: hashedPassword,
-      name: 'LYCARONZ Admin',
-      isAdmin: true,
-    },
-  });
-
-  console.log('✅ Admin account ready:', admin.email);
+  if (!email || !password) {
+    console.log('Admin seed skipped. Set ADMIN_EMAIL and ADMIN_PASSWORD.');
+  } else {
+    const hashedPassword = await hash(password, 10);
+    const admin = await prisma.user.upsert({
+      where: { email },
+      update: { isAdmin: true },
+      create: {
+        email,
+        password: hashedPassword,
+        name: 'LYCARONZ Admin',
+        isAdmin: true,
+      },
+    });
+    console.log('✅ Admin account ready:', admin.email);
+    console.log('   Password was set only if this account was new. It is not printed here.');
+  }
 
   // ── Sample products ─────────────────────────────────────────
   const products = [
@@ -95,13 +98,8 @@ async function main() {
   }
 
   const baseUrl = (process.env.NEXTAUTH_URL || process.env.AUTH_URL || 'http://localhost:3000').replace(/\/$/, '');
-  console.log('\n════════════════════════════════════════');
-  console.log('  ADMIN PORTAL LOGIN CREDENTIALS');
-  console.log(`  URL:      ${baseUrl}/admin/login`);
-  console.log(`  Email:    ${email}`);
-  console.log(`  Password: ${password}`);
-  console.log('════════════════════════════════════════');
-  console.log('⚠️  Change your password after first login via Admin → Settings\n');
+  console.log(`\nAdmin login: ${baseUrl}/admin/login`);
+  if (email) console.log(`Admin email: ${email}`);
 }
 
 main()

@@ -21,7 +21,7 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number;
+  price: number | null;
   category: string;
   imageUrl: string | null;
   video: string | null;
@@ -304,7 +304,7 @@ export default function AdminProducts() {
     setFormData({
       name: product.name,
       description: product.description || '',
-      price: product.price.toString(),
+      price: product.price != null ? String(product.price) : '',
       category: product.category,
       imageUrl: product.imageUrl || '',
       video: product.video || '',

@@ -8,16 +8,21 @@ import { isValidEmail, isValidPhone } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const orders = await prisma.order.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-    include: { product: true },
-  });
+    const orders = await prisma.order.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: { product: true },
+    });
 
-  return NextResponse.json(orders);
+    return NextResponse.json(orders);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {

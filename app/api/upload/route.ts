@@ -22,7 +22,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await new Promise((resolve, reject) => {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY || process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+    if (!cloudName || !apiKey || !process.env.CLOUDINARY_API_SECRET) {
+      return NextResponse.json(
+        { error: "Image storage is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET." },
+        { status: 503 }
+      );
+    }
+
+    const result = await new Promise<{ secure_url?: string }>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: "lycaronz-designs",
@@ -32,7 +41,7 @@ export async function POST(request: NextRequest) {
           if (error) {
             reject(error);
           } else {
-            resolve(result);
+            resolve(result ?? {});
           }
         }
       );
@@ -42,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      url: (result as any).secure_url,
+      url: result.secure_url,
       result,
     });
   } catch (error) {

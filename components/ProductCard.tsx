@@ -37,7 +37,7 @@ export default function ProductCard({
   )}`;
 
   return (
-    <article className="group relative bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden border border-gray-200/80 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-500 flex flex-col h-full">
+    <article className="group relative bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden border border-gray-200/80 shadow-sm hover:shadow-xl hover:border-amber-400/50 transition-all duration-500 flex flex-col h-full w-full min-w-0">
 
       {/* Product Image Frame */}
       <Link

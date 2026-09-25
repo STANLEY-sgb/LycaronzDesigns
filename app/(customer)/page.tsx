@@ -309,7 +309,8 @@ export default function Home() {
             </div>
 
             {/* Category Filter Tabs */}
-            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 max-w-full scroll-touch" role="group" aria-label="Filter by category">
+            <div className="w-full md:max-w-md min-w-0 overflow-x-auto scroll-touch" role="group" aria-label="Filter by category">
+              <div className="flex items-center gap-1.5 sm:gap-2 pb-1 w-max min-w-full">
               {['All', ...CATEGORIES].map((cat) => (
                 <button
                   key={cat}
@@ -325,6 +326,7 @@ export default function Home() {
                   {cat}
                 </button>
               ))}
+              </div>
             </div>
           </div>
           

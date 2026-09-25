@@ -12,7 +12,7 @@ export default function CustomerLayout({
     <div
       // On mobile: extra space below content to clear the fixed bottom nav (60px) + safe area
       // On tablet/desktop: no extra padding (bottom nav hidden)
-      className="pb-[calc(3.75rem+env(safe-area-inset-bottom))] md:pb-0"
+      className="pb-[calc(3.75rem+env(safe-area-inset-bottom))] md:pb-0 overflow-x-hidden w-full max-w-[100vw]"
     >
       {children}
     </div>

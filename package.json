@@ -2,6 +2,9 @@
   "name": "lycaronz-designs",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/vercel-build.mjs && next build",
@@ -12,6 +15,7 @@
     "prisma:deploy": "node scripts/vercel-build.mjs",
     "prisma:studio": "prisma studio",
     "seed": "node scripts/seed.mjs",
+    "db:import-sqlite": "node scripts/import-sqlite.mjs",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:install": "playwright install --with-deps"

@@ -41,6 +41,8 @@ next-env.d.ts
 # database
 prisma/*.db
 prisma/*.db-journal
+prisma/*.db.backup
+prisma/*.db.pre-postgres-migration
 *.sqlite
 *.sqlite3
 

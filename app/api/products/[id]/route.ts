@@ -42,17 +42,30 @@ export async function PUT(
 
     const data = await request.json();
 
+    const parsedPrice = data.price === '' || data.price === null || data.price === undefined
+      ? null
+      : Number(data.price);
+    if (parsedPrice !== null && Number.isNaN(parsedPrice)) {
+      return NextResponse.json({ error: 'Price must be a number.' }, { status: 400 });
+    }
+    if (!data.name || !String(data.name).trim()) {
+      return NextResponse.json({ error: 'Product name is required.' }, { status: 400 });
+    }
+    if (!data.category) {
+      return NextResponse.json({ error: 'Category is required.' }, { status: 400 });
+    }
+
     const product = await prisma.product.update({
       where: { id: params.id },
       data: {
-        name: data.name ? String(data.name).trim() : undefined,
+        name: String(data.name).trim(),
         description: data.description ? String(data.description).trim() : null,
-        price: data.price ? parseFloat(data.price) : undefined,
+        price: parsedPrice,
         category: data.category,
-        image: data.image || null,
+        ...(Object.prototype.hasOwnProperty.call(data, 'image') ? { image: data.image || null } : {}),
         imageUrl: data.imageUrl || null,
         video: data.video || null,
-        featured: data.featured !== undefined ? Boolean(data.featured) : undefined,
+        featured: Boolean(data.featured),
       },
     });
 

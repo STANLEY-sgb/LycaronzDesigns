@@ -7,9 +7,11 @@ import { getToken } from 'next-auth/jwt';
  * Middleware always runs on the Edge runtime in Next.js — no runtime config key is needed.
  */
 export async function middleware(req: NextRequest) {
+  const useSecureCookies = process.env.NODE_ENV === "production";
   const token = await getToken({
     req,
-    secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+    secureCookie: useSecureCookies,
   });
 
   const { pathname } = req.nextUrl;

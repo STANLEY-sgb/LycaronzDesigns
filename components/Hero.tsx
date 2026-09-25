@@ -52,7 +52,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-[2.25rem] xs:text-4xl sm:text-6xl md:text-7xl font-black mb-4 sm:mb-6 leading-[0.95] tracking-tight text-white"
+              className="text-[1.875rem] xs:text-[2.25rem] sm:text-6xl md:text-7xl font-black mb-4 sm:mb-6 leading-[0.95] tracking-tight text-white break-words"
             >
               LYCARONZ{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-200 to-yellow-400">
@@ -76,14 +76,14 @@ export default function Hero() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col xs:flex-row gap-3 justify-center lg:justify-start items-stretch xs:items-center mx-auto lg:mx-0 mb-6 sm:mb-10 max-w-sm xs:max-w-none"
+              className="flex flex-col sm:flex-row sm:flex-wrap gap-3 justify-center lg:justify-start items-stretch sm:items-center mx-auto lg:mx-0 mb-6 sm:mb-10 w-full max-w-md sm:max-w-none"
             >
-              <Link href="/products" className="btn-gold">
+              <Link href="/products" className="btn-gold w-full sm:w-auto">
                 <span>Explore Collection</span>
                 <ArrowRight size={16} aria-hidden="true" />
               </Link>
 
-              <Link href="/book-appointment" className="btn-dark">
+              <Link href="/book-appointment" className="btn-dark w-full sm:w-auto">
                 <Calendar size={16} className="text-amber-400" aria-hidden="true" />
                 <span>Book Fitting</span>
               </Link>
@@ -93,7 +93,7 @@ export default function Hero() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Get a WhatsApp quote from Lycaronz Designs"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] border border-[#25D366]/40 font-black text-xs sm:text-sm uppercase tracking-widest active:scale-95 transition-all duration-300"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-6 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] border border-[#25D366]/40 font-black text-xs sm:text-sm uppercase tracking-widest active:scale-95 transition-all duration-300"
               >
                 <MessageCircle size={18} aria-hidden="true" />
                 <span>WhatsApp Quote</span>

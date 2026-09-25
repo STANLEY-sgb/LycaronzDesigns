@@ -156,6 +156,25 @@ table {
 /* ── Smooth Scrolling for Mobile & iOS ──────────────────────────────────────── */
 .scroll-touch {
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scroll-touch::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent iOS input zoom on focused form fields */
+@media (max-width: 767px) {
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='number'],
+  input[type='search'],
+  input[type='password'],
+  input[type='datetime-local'],
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 /* ── Accessibility: Respect Reduced Motion Preferences ──────────────────────── */

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { 
   Lock, 
   Mail, 
@@ -16,13 +16,14 @@ import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { signIn } from 'next-auth/react';
 
-export default function AdminLogin() {
+function AdminLoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const signInError = searchParams.get('error');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,21 +31,13 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const result = await signIn('credentials', {
+      await signIn('credentials', {
         email,
         password,
-        redirect: false,
+        redirectTo: '/admin/dashboard',
       });
-
-      if (result?.error) {
-        setError('Invalid credentials. Please verify your email and password.');
-        setLoading(false);
-      } else {
-        router.push('/admin/dashboard');
-        router.refresh();
-      }
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError('Sign-in did not finish. Please try again.');
       setLoading(false);
     }
   };
@@ -56,10 +49,10 @@ export default function AdminLogin() {
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Return to Store Link */}
-      <div className="absolute top-6 left-6 z-20">
+      <div className="absolute top-4 left-3 xs:top-6 xs:left-6 z-20">
         <Link 
           href="/" 
-          className="flex items-center gap-2 text-gray-400 hover:text-amber-400 transition-colors font-black uppercase tracking-widest text-xs"
+          className="flex items-center gap-2 text-gray-400 hover:text-amber-400 transition-colors font-black uppercase tracking-widest text-[10px] xs:text-xs"
         >
           <ArrowLeft size={16} />
           <span>Back to Store</span>
@@ -70,14 +63,14 @@ export default function AdminLogin() {
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-10 pt-10 xs:pt-0"
+        className="w-full max-w-md relative z-10 pt-12 xs:pt-0 px-0"
       >
-        <div className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden p-6 sm:p-10 border border-gray-100">
+        <div className="bg-white rounded-2xl xs:rounded-3xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden p-5 xs:p-6 sm:p-10 border border-gray-100">
           
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 xs:mb-8">
             <Logo size="lg" priority className="mx-auto mb-4" />
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight uppercase text-gray-900 leading-tight">
+            <h1 className="text-xl xs:text-2xl sm:text-3xl font-black tracking-tight uppercase text-gray-900 leading-tight">
               LYCARONZ <span className="text-amber-600">ADMIN</span>
             </h1>
             <p className="text-gray-400 font-bold uppercase tracking-widest text-[9px] sm:text-[10px] mt-1">
@@ -129,13 +122,13 @@ export default function AdminLogin() {
               </div>
             </div>
 
-            {error && (
+            {(error || signInError) && (
               <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold text-center border border-red-200"
               >
-                {error}
+                {error || 'Invalid credentials. Please verify your email and password.'}
               </motion.div>
             )}
 
@@ -169,5 +162,13 @@ export default function AdminLogin() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function AdminLogin() {
+  return (
+    <Suspense fallback={null}>
+      <AdminLoginForm />
+    </Suspense>
   );
 }

@@ -122,20 +122,20 @@ export default function AdminLayout({
       {/* Mobile Top Navigation & Drawer */}
       <div className="lg:hidden">
         {/* Mobile Header Bar */}
-        <div className="fixed top-0 left-0 right-0 z-40 bg-[#0A0D1F] border-b border-white/10 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+        <div className="fixed top-0 left-0 right-0 z-40 bg-[#0A0D1F] border-b border-white/10 px-3 xs:px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 xs:gap-2.5 min-w-0">
             <button
               onClick={() => setIsSidebarOpen(true)}
               aria-label="Open admin menu"
-              className="p-2 rounded-xl bg-white/10 text-white"
+              className="p-2 rounded-xl bg-white/10 text-white shrink-0"
             >
               <Menu size={20} />
             </button>
-            <div className="flex flex-col">
-              <span className="font-black text-sm tracking-tight text-white uppercase leading-none">
+            <div className="flex flex-col min-w-0">
+              <span className="font-black text-xs xs:text-sm tracking-tight text-white uppercase leading-none truncate">
                 LYCARONZ <span className="text-amber-400">ADMIN</span>
               </span>
-              <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
+              <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 truncate">
                 Atelier Control
               </span>
             </div>
@@ -143,7 +143,7 @@ export default function AdminLayout({
 
           <Link
             href="/"
-            className="text-[11px] font-bold text-amber-300 hover:underline uppercase tracking-wider"
+            className="text-[10px] xs:text-[11px] font-bold text-amber-300 hover:underline uppercase tracking-wider shrink-0"
           >
             Store &rarr;
           </Link>
@@ -165,7 +165,7 @@ export default function AdminLayout({
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-                className="fixed inset-y-0 left-0 z-50 w-72 bg-[#0A0D1F] text-white p-6 shadow-2xl flex flex-col justify-between"
+                className="fixed inset-y-0 left-0 z-50 w-[min(18rem,92vw)] bg-[#0A0D1F] text-white p-5 xs:p-6 shadow-2xl flex flex-col justify-between"
               >
                 <div>
                   <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/10">
@@ -227,8 +227,8 @@ export default function AdminLayout({
       </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 xs:p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10">
+        <div className="max-w-7xl mx-auto w-full min-w-0">
           {children}
         </div>
       </main>

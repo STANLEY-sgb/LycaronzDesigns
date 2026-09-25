@@ -48,12 +48,13 @@ export default function Navbar() {
             className="flex items-center space-x-2 sm:space-x-3 group min-w-0 shrink"
             aria-label="LYCARONZ DESIGNS Home"
           >
-            <Logo size="md" priority className="group-hover:scale-105" />
+            <Logo size="sm" priority className="group-hover:scale-105 xs:hidden" />
+            <Logo size="md" priority className="group-hover:scale-105 hidden xs:block" />
             <div className="flex flex-col min-w-0">
-              <span className="font-black text-sm xs:text-base sm:text-xl lg:text-2xl tracking-tighter text-white leading-none truncate">
+              <span className="font-black text-xs xs:text-base sm:text-xl lg:text-2xl tracking-tighter text-white leading-none truncate">
                 LYCARONZ <span className="text-amber-400">DESIGNS</span>
               </span>
-              <span className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400 mt-0.5 truncate">
+              <span className="hidden xs:block text-[8px] xs:text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400 mt-0.5 truncate">
                 Haute Couture &amp; Atelier
               </span>
             </div>

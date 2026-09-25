@@ -46,6 +46,9 @@ prisma/*.db.pre-postgres-migration
 *.sqlite
 *.sqlite3
 
+# confidential handover (contains live passwords)
+Program Edition Version 2.md
+
 # uploads
 public/uploads/
 *.mp4

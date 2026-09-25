@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { upload } from '@vercel/blob/client';
 
 interface Product {
   id: string;
@@ -85,8 +86,8 @@ function UploadProgressBar({ state }: { state: UploadState; type?: 'image' | 'vi
       {state.uploading && (
         <div className="w-full bg-blue-200 rounded-full h-1.5 overflow-hidden">
           <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-200"
-            style={{ width: `${state.progress}%` }}
+            className={`h-full bg-blue-500 rounded-full transition-all duration-200 ${state.progress > 0 ? '' : 'w-1/2 animate-pulse'}`}
+            style={state.progress > 0 ? { width: `${state.progress}%` } : undefined}
           />
         </div>
       )}
@@ -192,47 +193,19 @@ export default function AdminProducts() {
     });
 
     try {
-      // Use XMLHttpRequest for real progress events
-      const url = await new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.addEventListener('progress', (evt) => {
-          if (evt.lengthComputable) {
-            const pct = Math.round((evt.loaded / evt.total) * 100);
-            setUpload(prev => ({ ...prev, progress: pct }));
-          }
-        });
-
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              if (data.url) {
-                resolve(data.url);
-              } else {
-                reject(new Error(data.error || 'Upload response missing URL'));
-              }
-            } catch {
-              reject(new Error('Invalid server response'));
-            }
-          } else {
-            let msg = `Server error (${xhr.status})`;
-            try {
-              const err = JSON.parse(xhr.responseText);
-              msg = err.error || msg;
-            } catch { /* ignore */ }
-            reject(new Error(msg));
-          }
-        });
-
-        xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
-        xhr.addEventListener('abort', () => reject(new Error('Upload was cancelled')));
-
-        xhr.open('POST', `/api/upload?filename=${encodeURIComponent(file.name)}`);
-        xhr.send(file);
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+      const blob = await upload(`lycaronz-designs/${safeName}`, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+        contentType: file.type || undefined,
+        multipart: file.size > 4 * 1024 * 1024,
       });
 
-      setFormData(prev => ({ ...prev, [type]: url }));
+      if (!blob.url) {
+        throw new Error('Upload finished without a file address.');
+      }
+
+      setFormData(prev => ({ ...prev, [type]: blob.url }));
       setUpload(prev => ({ ...prev, uploading: false, progress: 100 }));
       toast.success(`${uploadKind === 'image' ? 'Image' : 'Video'} uploaded successfully!`);
     } catch (error) {
@@ -249,7 +222,11 @@ export default function AdminProducts() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!formData.name.trim()) { toast.error('Product name is required.'); return; }
-    if (!formData.price || isNaN(parseFloat(formData.price))) { toast.error('Valid price is required.'); return; }
+    if (!formData.category.trim()) { toast.error('Category is required.'); return; }
+    if (formData.price.trim() !== '' && (Number.isNaN(Number(formData.price)) || Number(formData.price) < 0)) {
+      toast.error('Price must be a number, or leave it blank for a custom quote.');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -490,17 +467,17 @@ export default function AdminProducts() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-3xl sm:rounded-[3rem] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto"
+              className="relative w-full max-w-2xl bg-white rounded-2xl sm:rounded-[3rem] shadow-2xl overflow-hidden max-h-[min(92vh,100dvh)] overflow-y-auto overscroll-contain"
             >
-              <div className="p-6 sm:p-10">
-                <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
+              <div className="p-4 xs:p-6 sm:p-10">
+                <div className="flex justify-between items-center mb-6 sm:mb-8 gap-3">
+                  <h2 className="text-xl xs:text-2xl sm:text-3xl font-black uppercase tracking-tight min-w-0">
                     {editingProduct ? 'Edit Product' : 'New Product'}
                   </h2>
                   <button
                     onClick={closeModal}
                     aria-label="Close modal"
-                    className="p-2.5 bg-gray-100 rounded-full hover:bg-gray-200 transition-all"
+                    className="p-2.5 bg-gray-100 rounded-full hover:bg-gray-200 transition-all shrink-0"
                   >
                     <X size={20} />
                   </button>
@@ -521,15 +498,14 @@ export default function AdminProducts() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Price (UGX) *</label>
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Price (UGX)</label>
                       <input
                         type="number"
-                        required
                         min="0"
                         value={formData.price}
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         className="input-field"
-                        placeholder="e.g. 150000"
+                        placeholder="Leave blank for a custom quote"
                       />
                     </div>
                   </div>

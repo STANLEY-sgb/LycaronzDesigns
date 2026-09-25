@@ -203,10 +203,10 @@ export default function ProductDetails() {
                 )}
                 
                 {product.featured && (
-                  <div className="absolute top-4 left-4 bg-[#0A0D1F]/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-amber-400/40 shadow-lg">
-                    <span className="text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center gap-1.5">
-                      <Star size={12} className="fill-amber-400 text-amber-400" />
-                      Featured Atelier Piece
+                  <div className="absolute top-3 left-3 right-14 sm:right-auto sm:top-4 sm:left-4 bg-[#0A0D1F]/90 backdrop-blur-md px-2.5 sm:px-3.5 py-1.5 rounded-full border border-amber-400/40 shadow-lg max-w-[calc(100%-4.5rem)]">
+                    <span className="text-[9px] sm:text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center gap-1.5 truncate">
+                      <Star size={12} className="fill-amber-400 text-amber-400 shrink-0" />
+                      <span className="truncate">Featured Atelier Piece</span>
                     </span>
                   </div>
                 )}
@@ -272,7 +272,7 @@ export default function ProductDetails() {
               </div>
 
               {/* Information Tabs */}
-              <div className="flex border-b border-gray-200 mb-6 gap-2">
+              <div className="flex border-b border-gray-200 mb-6 gap-1 sm:gap-2 overflow-x-auto scroll-touch -mx-1 px-1">
                 {([
                   { id: 'description', label: 'Description' },
                   { id: 'specifications', label: 'Craft & Fabric' },
@@ -281,7 +281,7 @@ export default function ProductDetails() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`pb-3 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all relative ${
+                    className={`pb-3 px-2.5 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all relative whitespace-nowrap shrink-0 ${
                       activeTab === tab.id 
                         ? 'text-gray-950 font-black' 
                         : 'text-gray-400 hover:text-gray-700'
